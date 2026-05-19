@@ -14,11 +14,8 @@ export const WS_URL = trimTrailingSlash(
   import.meta.env.VITE_WS_URL || 'ws://localhost:5001'
 );
 
-/** REST base path for auth, trades, admin, and engine proxy routes */
+/** REST API base (Node backend only) */
 export const API_BASE = `${API_URL}/api`;
-
-/** Python AI engine routes (same host in production; Node proxies or serves /api/engine) */
-export const ENGINE_BASE = `${API_URL}/api`;
 
 /** WebSocket endpoint for live prices / account updates */
 export const WS_ENDPOINT = `${WS_URL}/ws`;
