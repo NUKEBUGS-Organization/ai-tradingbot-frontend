@@ -4,8 +4,7 @@
  * Connects to Node.js backend + Python AI Engine
  */
 
-const API_BASE = 'http://localhost:5000/api';
-const ENGINE_BASE = 'http://localhost:8000/api';
+import { API_BASE, ENGINE_BASE } from '../config/env';
 
 // Helper for authenticated requests
 const authFetch = async (url, options = {}) => {

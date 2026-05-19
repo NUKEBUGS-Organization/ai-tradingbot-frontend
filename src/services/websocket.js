@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { WS_ENDPOINT } from '../config/env';
 
 export function useWebSocket() {
   const [prices, setPrices] = useState({
@@ -89,9 +90,7 @@ export function useWebSocket() {
 
   const connect = useCallback(() => {
     try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
-      const ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(WS_ENDPOINT);
 
       ws.onopen = () => {
         setConnected(true);
