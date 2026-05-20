@@ -1,14 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
+import api from '../services/api';
 import { Shield, AlertTriangle, TrendingDown, Layers, Zap, Newspaper, BarChart3, Target } from 'lucide-react';
 
 export default function RiskManagement() {
   const { user } = useAuth();
   const { account } = useWebSocket();
+  const [activePreset, setActivePreset] = useState(null);
+  const [presetLoading, setPresetLoading] = useState(false);
   const risk = user?.riskSettings || {};
+
+  useEffect(() => {
+    if (user?.riskSettings?.maxRiskPerTrade) {
+      const r = user.riskSettings.maxRiskPerTrade;
+      setActivePreset(r <= 1 ? 'conservative' : r <= 3 ? 'moderate' : 'aggressive');
+    }
+  }, [user]);
+
+  const handlePresetChange = async (presetLabel) => {
+    const preset = presetLabel.toLowerCase();
+    setPresetLoading(true);
+    try {
+      await api.setRiskPreset(preset);
+      setActivePreset(preset);
+    } catch (err) {
+      console.error('Failed to change preset:', err);
+    } finally {
+      setPresetLoading(false);
+    }
+  };
   const bal = account?.balance || user?.mt5Account?.balance || 10000;
   const eq = account?.equity || user?.mt5Account?.equity || 10000;
   const ddPct = ((bal - eq) / bal * 100).toFixed(2);
@@ -27,12 +50,10 @@ export default function RiskManagement() {
   ];
 
   const riskLevels = [
-    { label: 'Conservative', maxRisk: 1, maxDD: 3, maxPos: 3, color: '#3fb950' },
-    { label: 'Moderate', maxRisk: 2, maxDD: 5, maxPos: 5, color: '#d4af37' },
-    { label: 'Aggressive', maxRisk: 5, maxDD: 10, maxPos: 10, color: '#f85149' },
+    { label: 'Conservative', key: 'conservative', maxRisk: 1, maxDD: 3, maxPos: 3, color: '#3fb950' },
+    { label: 'Moderate', key: 'moderate', maxRisk: 2, maxDD: 5, maxPos: 5, color: '#d4af37' },
+    { label: 'Aggressive', key: 'aggressive', maxRisk: 5, maxDD: 10, maxPos: 10, color: '#f85149' },
   ];
-
-  const currentLevel = (risk.maxRiskPerTrade || 2) <= 1 ? 0 : (risk.maxRiskPerTrade || 2) <= 3 ? 1 : 2;
 
   return (
     <div className="app-layout">
@@ -84,15 +105,23 @@ export default function RiskManagement() {
               </div>
               <div className="card-body">
                 {riskLevels.map((level, i) => (
-                  <div key={i} style={{
+                  <div
+                    key={i}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => !presetLoading && handlePresetChange(level.label)}
+                    onKeyDown={(e) => e.key === 'Enter' && !presetLoading && handlePresetChange(level.label)}
+                    style={{
                     padding: 16, marginBottom: 12, borderRadius: 'var(--radius-sm)',
-                    background: i === currentLevel ? 'rgba(212,175,55,0.06)' : 'var(--bg-primary)',
-                    border: `1px solid ${i === currentLevel ? 'rgba(212,175,55,0.2)' : 'var(--border-subtle)'}`,
-                    cursor: 'pointer', transition: 'var(--transition)'
+                    background: level.key === activePreset ? 'rgba(212,175,55,0.06)' : 'var(--bg-primary)',
+                    border: `1px solid ${level.key === activePreset ? 'rgba(212,175,55,0.2)' : 'var(--border-subtle)'}`,
+                    cursor: presetLoading ? 'wait' : 'pointer',
+                    opacity: presetLoading ? 0.6 : 1,
+                    transition: 'var(--transition)',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                       <span style={{ fontSize: 14, fontWeight: 700, color: level.color }}>{level.label}</span>
-                      {i === currentLevel && <span className="badge badge-gold">Active</span>}
+                      {level.key === activePreset && <span className="badge badge-gold">Active</span>}
                     </div>
                     <div style={{ display: 'flex', gap: 20, fontSize: 11, color: '#8b949e' }}>
                       <span>Risk: {level.maxRisk}%</span>

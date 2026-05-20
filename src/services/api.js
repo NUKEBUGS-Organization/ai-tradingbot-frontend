@@ -294,7 +294,12 @@ export const api = {
     };
   },
 
-  setRiskPreset: async () => null,
+  setRiskPreset: async (preset) => {
+    return protectedFetch(`${API_BASE}/engine/risk/preset`, {
+      method: 'POST',
+      body: JSON.stringify({ preset }),
+    });
+  },
   runBacktest: async ({ symbol = 'XAUUSD', initial_balance = 10000, preset = 'moderate', spread_pips = 3.0 } = {}) => {
     const result = await protectedFetch(
       `${API_BASE}/engine/backtest`,
