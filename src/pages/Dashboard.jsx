@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
+import { pickMt5LiveAccount } from '../utils/tradeMetrics';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, TrendingUp, TrendingDown, Activity, Target, BarChart3, Wifi, WifiOff, Zap, Shield, MessageCircle } from 'lucide-react';
 
@@ -14,9 +15,19 @@ export default function Dashboard() {
   const [trades, setTrades] = useState([]);
   const [equityCurve, setEquityCurve] = useState([]);
   const [tab, setTab] = useState('open');
+  const [mt5Live, setMt5Live] = useState(null);
 
   useEffect(() => {
     loadData();
+    const pollMt5 = async () => {
+      try {
+        const eng = await api.getEngineStatus();
+        setMt5Live(pickMt5LiveAccount(eng, null));
+      } catch (_) { /* ignore */ }
+    };
+    pollMt5();
+    const id = setInterval(pollMt5, 15000);
+    return () => clearInterval(id);
   }, []);
 
   const loadData = async () => {
@@ -31,9 +42,10 @@ export default function Dashboard() {
     } catch (err) { console.error(err); }
   };
 
-  const bal = account?.balance || user?.mt5Account?.balance || 0;
-  const eq = account?.equity || user?.mt5Account?.equity || 0;
-  const dailyPnl = account?.dailyPnl || user?.stats?.dailyPnl || 0;
+  const live = pickMt5LiveAccount(null, account) || mt5Live;
+  const bal = live?.balance ?? user?.mt5Account?.balance ?? 0;
+  const eq = live?.equity ?? user?.mt5Account?.equity ?? 0;
+  const dailyPnl = live?.dailyPnl ?? user?.stats?.dailyPnl ?? 0;
 
   const COLORS = ['#3fb950', '#f85149', '#d4af37'];
   const pieData = stats ? [

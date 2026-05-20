@@ -4,6 +4,7 @@
  */
 
 import { API_BASE, ENGINE_BASE } from '../config/env';
+import { pickMt5LiveAccount, mapRiskSettingsForUi } from '../utils/tradeMetrics';
 
 const getToken = () => localStorage.getItem('aurumx_token');
 
@@ -78,23 +79,6 @@ function normalizeSignalsResponse(data) {
       total: list.length,
       win_rate: list.length ? Math.round((active.length / list.length) * 100) : 0,
     },
-  };
-}
-
-function mapRiskSettingsForUi(riskSettings, profile) {
-  const rs = riskSettings || {};
-  const maxRisk = rs.maxRiskPerTrade ?? 2;
-  return {
-    preset: maxRisk <= 1 ? 'conservative' : maxRisk <= 3 ? 'moderate' : 'aggressive',
-    locked: false,
-    balance: profile?.mt5Account?.balance ?? 0,
-    equity: profile?.mt5Account?.equity ?? 0,
-    daily_pnl: profile?.stats?.dailyPnl ?? 0,
-    open_positions: 0,
-    max_positions: rs.maxOpenPositions ?? 5,
-    risk_percent: maxRisk,
-    daily_drawdown_pct: 0,
-    settings: rs,
   };
 }
 
@@ -203,7 +187,7 @@ export const api = {
   getTrades: async (params = '') => {
     const qs = params && !params.startsWith('?') ? `?${params}` : params;
     const result = await protectedFetch(`${API_BASE}/trades${qs}`);
-    if (result?.trades) return result;
+    if (result && Array.isArray(result.trades)) return result;
     const isClosed = params.includes('closed');
     return {
       trades: isClosed
@@ -263,21 +247,28 @@ export const api = {
     return Array.isArray(result) ? result : [];
   },
 
-  getRiskStatus: async (userId) => {
+  getEngineRisk: async (userId, profileFromCaller = null, engineStatus = null) => {
+    const profile = profileFromCaller || (await api.getProfile());
+    const live = pickMt5LiveAccount(engineStatus, null);
     if (!userId) {
-      const profile = await api.getProfile();
       if (!profile?._id) {
-        return mapRiskSettingsForUi(mockUser.riskSettings, mockUser);
+        return mapRiskSettingsForUi(mockUser.riskSettings, mockUser, live);
       }
       userId = profile._id;
     }
-    const [riskSettings, profile] = await Promise.all([
-      protectedFetch(`${API_BASE}/engine/risk/${userId}`, {}),
-      api.getProfile(),
-    ]);
-    if (riskSettings) return mapRiskSettingsForUi(riskSettings, profile);
-    return mapRiskSettingsForUi(profile?.riskSettings, profile || mockUser);
+    const isMongoId = /^[a-f\d]{24}$/i.test(String(userId));
+    if (!isMongoId) {
+      return mapRiskSettingsForUi(profile?.riskSettings, profile || mockUser, live);
+    }
+    const riskSettings = await protectedFetch(`${API_BASE}/engine/risk/${userId}`, {});
+    if (riskSettings && !riskSettings.message) {
+      return mapRiskSettingsForUi(riskSettings, profile, live);
+    }
+    return mapRiskSettingsForUi(profile?.riskSettings, profile || mockUser, live);
   },
+
+  /** @deprecated use getEngineRisk */
+  getRiskStatus: async (userId) => api.getEngineRisk(userId),
 
   /** Use GET /api/signals — not /api/engine/signals */
   getEngineSignals: async () => {
@@ -285,14 +276,39 @@ export const api = {
     return normalizeSignalsResponse(data);
   },
 
-  // —— Disabled until backend exposes these routes ——
-  analyzeSymbol: async () => ({
-    action: 'UNAVAILABLE',
-    reason: 'Market analyze API is not available on the backend yet.',
-  }),
+  // POST /api/engine/analyze (proxies to Python engine)
+  analyzeSymbol: async (symbol = 'XAUUSD') => {
+    const result = await protectedFetch(
+      `${API_BASE}/engine/analyze`,
+      { method: 'POST', body: JSON.stringify({ symbol }) },
+      null
+    );
+    if (result?.action === 'OFFLINE' || result?.reason) return result;
+    if (result?.symbol != null || result?.analysis) return result;
+    if (result?.message?.includes('Cannot POST')) {
+      return { action: 'OFFLINE', reason: 'Node server missing /api/engine/analyze — restart npm run start in server/' };
+    }
+    return {
+      action: 'OFFLINE',
+      reason: result?.message || result?.error || 'Python engine not reachable. Restart Node server (npm run start in server/).',
+    };
+  },
 
   setRiskPreset: async () => null,
-  runBacktest: async () => null,
+  runBacktest: async ({ symbol = 'XAUUSD', initial_balance = 10000, preset = 'moderate', spread_pips = 3.0 } = {}) => {
+    const result = await protectedFetch(
+      `${API_BASE}/engine/backtest`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ symbol, initial_balance, preset, spread_pips }),
+      },
+      null
+    );
+    if (result?.metrics || result?.trades) return result;
+    return {
+      error: result?.detail || result?.message || result?.error || 'Backtest failed. Ensure Python engine is running with candle data.',
+    };
+  },
   getEngineHealth: async () => api.getHealth(),
   updateTelegramConfig: async () => ({
     success: false,

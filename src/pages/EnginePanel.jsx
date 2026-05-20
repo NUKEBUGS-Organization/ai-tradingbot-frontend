@@ -3,15 +3,25 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { Cpu, Activity, Wifi, WifiOff, Zap, Shield, RefreshCw, AlertTriangle } from 'lucide-react';
+import { normalizeSignalsList, pickMt5LiveAccount, mapRiskSettingsForUi } from '../utils/tradeMetrics';
+import { useWebSocket } from '../services/websocket';
+import { Cpu, Activity, Wifi, WifiOff, Zap, Shield, RefreshCw, AlertTriangle, Play, BarChart3 } from 'lucide-react';
+
+const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD'];
 
 export default function EnginePanel() {
   const { user } = useAuth();
+  const { account: wsAccount } = useWebSocket();
   const [engineStatus, setEngineStatus] = useState(null);
   const [riskStatus, setRiskStatus] = useState(null);
   const [signals, setSignals] = useState({ active: [], stats: {}, history: [] });
   const [engineTrades, setEngineTrades] = useState([]);
+  const [analysis, setAnalysis] = useState(null);
+  const [backtest, setBacktest] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [backtesting, setBacktesting] = useState(false);
+  const [selectedSymbol, setSelectedSymbol] = useState('XAUUSD');
 
   useEffect(() => {
     loadData();
@@ -19,23 +29,56 @@ export default function EnginePanel() {
     return () => clearInterval(interval);
   }, [user?._id]);
 
+  useEffect(() => {
+    if (!engineStatus) return;
+    const live = pickMt5LiveAccount(engineStatus, wsAccount);
+    if (!live) return;
+    setRiskStatus((prev) =>
+      mapRiskSettingsForUi(prev?.settings || user?.riskSettings, user, live)
+    );
+  }, [engineStatus?.mt5_account?.balance, engineStatus?.mt5_account?.equity, wsAccount?.source]);
+
   const loadData = async () => {
     try {
-      const userId = user?._id;
-      const [eng, risk, sig, aiTrades] = await Promise.all([
-        api.getEngineStatus(),
-        api.getRiskStatus(userId),
-        api.getEngineSignals(),
+      const profile = user || (await api.getProfile());
+      const userId = profile?._id;
+      const eng = await api.getEngineStatus();
+      const live = pickMt5LiveAccount(eng, wsAccount);
+      const [risk, sigList, aiTrades] = await Promise.all([
+        api.getEngineRisk(userId, profile, eng),
+        api.getSignals(),
         api.getEngineTrades(),
       ]);
       setEngineStatus(eng);
-      setRiskStatus(risk);
-      setSignals(sig);
+      setRiskStatus((prev) => {
+        if (live) {
+          return mapRiskSettingsForUi(risk?.settings || profile?.riskSettings, profile, live);
+        }
+        if (prev?.fromMt5) return { ...prev, ...risk, balance: prev.balance, equity: prev.equity, daily_pnl: prev.daily_pnl, open_positions: prev.open_positions, fromMt5: true };
+        return risk;
+      });
+      setSignals(normalizeSignalsList(sigList));
       setEngineTrades(aiTrades);
     } catch (err) {
       console.error(err);
     }
     setLoading(false);
+  };
+
+  const handleAnalyze = async () => {
+    setAnalyzing(true);
+    setAnalysis(null);
+    const result = await api.analyzeSymbol(selectedSymbol);
+    setAnalysis(result);
+    setAnalyzing(false);
+  };
+
+  const handleBacktest = async () => {
+    setBacktesting(true);
+    setBacktest(null);
+    const result = await api.runBacktest({ symbol: selectedSymbol });
+    setBacktest(result);
+    setBacktesting(false);
   };
 
   const isConnected = engineStatus?.connected || engineStatus?.engine?.is_running;
@@ -86,7 +129,10 @@ export default function EnginePanel() {
           <div className="card" style={{ marginTop: 20 }}>
             <div className="card-header">
               <span className="card-title"><Shield size={16} /> Risk Management</span>
-              <span className={`badge ${riskStatus?.locked ? 'badge-red' : 'badge-green'}`}>{riskStatus?.locked ? 'LOCKED' : 'Active'}</span>
+              <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {riskStatus?.fromMt5 && <span className="badge badge-gold">MT5 LIVE</span>}
+                <span className={`badge ${riskStatus?.locked ? 'badge-red' : 'badge-green'}`}>{riskStatus?.locked ? 'LOCKED' : 'Active'}</span>
+              </span>
             </div>
             <div className="card-body">
               <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
@@ -122,15 +168,115 @@ export default function EnginePanel() {
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: 20 }}>
-            <div className="card-header">
-              <span className="card-title"><Zap size={16} /> API scope</span>
+          <div className="grid-2-1" style={{ marginTop: 20 }}>
+            <div className="card">
+              <div className="card-header">
+                <span className="card-title"><Zap size={16} /> Analyze Market</span>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <select
+                    value={selectedSymbol}
+                    onChange={(e) => setSelectedSymbol(e.target.value)}
+                    style={{ background: '#161b22', border: '1px solid #21262d', color: '#e6edf3', padding: '4px 8px', borderRadius: 6, fontSize: 12 }}
+                  >
+                    {ANALYZE_SYMBOLS.map((sym) => (
+                      <option key={sym} value={sym}>{sym}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleAnalyze}
+                    disabled={analyzing}
+                    style={{
+                      background: 'linear-gradient(135deg, #d4af37, #b8941f)',
+                      border: 'none',
+                      color: '#0d1117',
+                      padding: '4px 16px',
+                      borderRadius: 6,
+                      fontWeight: 700,
+                      fontSize: 12,
+                      cursor: analyzing ? 'wait' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    {analyzing ? <RefreshCw size={12} className="spin" /> : <Play size={12} />}
+                    {analyzing ? 'Analyzing...' : 'Analyze'}
+                  </button>
+                </div>
+              </div>
+              <div className="card-body" style={{ minHeight: 200 }}>
+                {analysis ? (
+                  <div>
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+                      <span className={`badge ${analysis.action === 'TRADE' ? 'badge-green' : analysis.action === 'BLOCKED' || analysis.action === 'OFFLINE' ? 'badge-red' : 'badge-gold'}`}>
+                        {analysis.action}
+                      </span>
+                      {analysis.confidence > 0 && <span className="badge badge-gold">Confidence: {analysis.confidence}%</span>}
+                      {analysis.signal?.grade && <span className="badge badge-green">Grade: {analysis.signal.grade}</span>}
+                    </div>
+                    {analysis.signal && (
+                      <div style={{ background: '#161b22', borderRadius: 8, padding: 16, border: '1px solid #21262d' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Direction:</span> <strong style={{ color: analysis.signal.type === 'BUY' ? '#3fb950' : '#f85149' }}>{analysis.signal.type}</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Entry:</span> <strong>{analysis.signal.entry}</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>SL:</span> <strong style={{ color: '#f85149' }}>{analysis.signal.sl}</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>TP:</span> <strong style={{ color: '#3fb950' }}>{analysis.signal.tp}</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Lot Size:</span> <strong>{analysis.signal.lot_size}</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Risk:</span> <strong>{analysis.signal.risk_percent}%</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Session:</span> <strong>{analysis.signal.session}</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>AMD Phase:</span> <strong>{analysis.signal.amd_phase || '-'}</strong></div>
+                        </div>
+                      </div>
+                    )}
+                    {analysis.reason && (
+                      <div style={{ marginTop: 12, color: analysis.action === 'OFFLINE' ? '#f85149' : '#f0883e', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <AlertTriangle size={14} /> {analysis.reason}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', color: '#545d68', padding: 40 }}>
+                    Select a symbol and click Analyze to run AI market analysis
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="card-body" style={{ color: '#8b949e', fontSize: 13, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-              <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2, color: '#d4af37' }} />
-              <span>
-                Analyze and backtest are not on the Node API. This panel uses engine status, risk settings (with your user ID), signals, and engine trades only.
-              </span>
+
+            <div className="card">
+              <div className="card-header">
+                <span className="card-title"><BarChart3 size={16} /> Backtest</span>
+                <button
+                  type="button"
+                  onClick={handleBacktest}
+                  disabled={backtesting}
+                  style={{ background: '#21262d', border: '1px solid #30363d', color: '#e6edf3', padding: '4px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12, cursor: backtesting ? 'wait' : 'pointer' }}
+                >
+                  {backtesting ? 'Running...' : 'Run Backtest'}
+                </button>
+              </div>
+              <div className="card-body" style={{ minHeight: 200 }}>
+                {backtest?.metrics ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div><span style={{ color: '#545d68', fontSize: 11 }}>Total Trades:</span><br /><strong>{backtest.metrics.total_trades}</strong></div>
+                    <div><span style={{ color: '#545d68', fontSize: 11 }}>Win Rate:</span><br /><strong style={{ color: '#3fb950' }}>{backtest.metrics.win_rate}%</strong></div>
+                    <div><span style={{ color: '#545d68', fontSize: 11 }}>Profit:</span><br /><strong style={{ color: (backtest.metrics.total_profit ?? 0) >= 0 ? '#3fb950' : '#f85149' }}>${backtest.metrics.total_profit}</strong></div>
+                    <div><span style={{ color: '#545d68', fontSize: 11 }}>Profit Factor:</span><br /><strong>{backtest.metrics.profit_factor}</strong></div>
+                    <div><span style={{ color: '#545d68', fontSize: 11 }}>Max Drawdown:</span><br /><strong style={{ color: '#f85149' }}>{backtest.metrics.max_drawdown}%</strong></div>
+                    <div><span style={{ color: '#545d68', fontSize: 11 }}>Sharpe Ratio:</span><br /><strong>{backtest.metrics.sharpe_ratio}</strong></div>
+                    <div><span style={{ color: '#545d68', fontSize: 11 }}>Return:</span><br /><strong style={{ color: '#d4af37' }}>{backtest.metrics.return_pct}%</strong></div>
+                    <div><span style={{ color: '#545d68', fontSize: 11 }}>Final Balance:</span><br /><strong>${backtest.metrics.final_balance?.toLocaleString()}</strong></div>
+                  </div>
+                ) : backtest?.error ? (
+                  <div style={{ textAlign: 'center', color: '#f85149', padding: 40, fontSize: 13 }}>
+                    <AlertTriangle size={16} style={{ marginBottom: 8 }} /><br />{backtest.error}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', color: '#545d68', padding: 40 }}>
+                    Run backtest on loaded MT5 candle data for {selectedSymbol}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

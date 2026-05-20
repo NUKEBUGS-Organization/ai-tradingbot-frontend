@@ -7,14 +7,7 @@ export function useWebSocket() {
     EURUSD: { bid: 1.08420, ask: 1.08432, spread: 12 },
     GBPUSD: { bid: 1.26540, ask: 1.26555, spread: 15 }
   });
-  const [account, setAccount] = useState({
-    balance: 52430.80,
-    equity: 53210.45,
-    margin: 2100,
-    freeMargin: 51110.45,
-    marginLevel: 2533.8,
-    dailyPnl: 780.65
-  });
+  const [account, setAccount] = useState(null);
   const [signals, setSignals] = useState([]);
   const [connected, setConnected] = useState(true);
   const wsRef = useRef(null);
@@ -43,18 +36,7 @@ export function useWebSocket() {
       });
     }, 1500);
 
-    // Account simulation
-    const accountInterval = setInterval(() => {
-      const equity = 52430.80 + (Math.random() - 0.45) * 500;
-      setAccount({
-        balance: 52430.80,
-        equity: parseFloat(equity.toFixed(2)),
-        margin: parseFloat((2100 + Math.random() * 200).toFixed(2)),
-        freeMargin: parseFloat((equity - 2100).toFixed(2)),
-        marginLevel: parseFloat(((equity / 2100) * 100).toFixed(1)),
-        dailyPnl: parseFloat(((equity - 52430.80)).toFixed(2))
-      });
-    }, 5000);
+    // Do not simulate account — real MT5 data comes from GET /api/engine/status and WS source=mt5
 
     // Signal simulation
     const signalInterval = setInterval(() => {
@@ -75,15 +57,16 @@ export function useWebSocket() {
       }
     }, 10000);
 
-    simulationRef.current = { priceInterval, accountInterval, signalInterval };
+    simulationRef.current = { priceInterval, signalInterval };
     setConnected(true);
   }, []);
 
   const stopSimulation = useCallback(() => {
     if (simulationRef.current) {
       clearInterval(simulationRef.current.priceInterval);
-      clearInterval(simulationRef.current.accountInterval);
-      clearInterval(simulationRef.current.signalInterval);
+      if (simulationRef.current.signalInterval) {
+        clearInterval(simulationRef.current.signalInterval);
+      }
       simulationRef.current = null;
     }
   }, []);
@@ -106,7 +89,10 @@ export function useWebSocket() {
               setPrices(data.prices);
               break;
             case 'account_update':
-              setAccount(data.account);
+              if (data.source === 'simulation') break;
+              if (data.account) {
+                setAccount({ ...data.account, source: data.source || 'mt5' });
+              }
               break;
             case 'signal_alert':
               setSignals(prev => [data.signal, ...prev].slice(0, 10));
