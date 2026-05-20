@@ -3,13 +3,14 @@ import { WS_ENDPOINT } from '../config/env';
 
 export function useWebSocket() {
   const [prices, setPrices] = useState({
-    XAUUSD: { bid: 2365.50, ask: 2365.80, spread: 30 },
-    EURUSD: { bid: 1.08420, ask: 1.08432, spread: 12 },
-    GBPUSD: { bid: 1.26540, ask: 1.26555, spread: 15 }
+    XAUUSD: { bid: null, ask: null, spread: 0 },
+    EURUSD: { bid: null, ask: null, spread: 0 },
+    GBPUSD: { bid: null, ask: null, spread: 0 },
   });
   const [account, setAccount] = useState(null);
   const [signals, setSignals] = useState([]);
   const [connected, setConnected] = useState(true);
+  const [priceSource, setPriceSource] = useState(null);
   const wsRef = useRef(null);
   const reconnectRef = useRef(null);
   const simulationRef = useRef(null);
@@ -22,21 +23,7 @@ export function useWebSocket() {
   const startSimulation = useCallback(() => {
     if (simulationRef.current) return;
 
-    // Price simulation
-    const priceInterval = setInterval(() => {
-      setPrices(prev => {
-        const gold = prev.XAUUSD.bid + (Math.random() - 0.48) * 2.5;
-        const eur = prev.EURUSD.bid + (Math.random() - 0.49) * 0.0008;
-        const gbp = prev.GBPUSD.bid + (Math.random() - 0.49) * 0.0010;
-        return {
-          XAUUSD: { bid: parseFloat(gold.toFixed(2)), ask: parseFloat((gold + 0.30).toFixed(2)), spread: 30 },
-          EURUSD: { bid: parseFloat(eur.toFixed(5)), ask: parseFloat((eur + 0.00012).toFixed(5)), spread: 12 },
-          GBPUSD: { bid: parseFloat(gbp.toFixed(5)), ask: parseFloat((gbp + 0.00015).toFixed(5)), spread: 15 }
-        };
-      });
-    }, 1500);
-
-    // Do not simulate account — real MT5 data comes from GET /api/engine/status and WS source=mt5
+    // Do not simulate prices on the client — server/MT5 only
 
     // Signal simulation
     const signalInterval = setInterval(() => {
@@ -57,13 +44,12 @@ export function useWebSocket() {
       }
     }, 10000);
 
-    simulationRef.current = { priceInterval, signalInterval };
+    simulationRef.current = { signalInterval };
     setConnected(true);
   }, []);
 
   const stopSimulation = useCallback(() => {
     if (simulationRef.current) {
-      clearInterval(simulationRef.current.priceInterval);
       if (simulationRef.current.signalInterval) {
         clearInterval(simulationRef.current.signalInterval);
       }
@@ -86,7 +72,12 @@ export function useWebSocket() {
           const data = JSON.parse(event.data);
           switch (data.type) {
             case 'price_update':
-              setPrices(data.prices);
+              if (data.source === 'simulation') break;
+              if (!data.source || data.source !== 'mt5') break;
+              if (data.prices) {
+                setPrices((prev) => ({ ...prev, ...data.prices }));
+                setPriceSource('mt5');
+              }
               break;
             case 'account_update':
               if (data.source === 'simulation') break;
@@ -130,5 +121,5 @@ export function useWebSocket() {
     };
   }, [connect, stopSimulation]);
 
-  return { prices, account, signals, connected };
+  return { prices, account, signals, connected, priceSource };
 }
