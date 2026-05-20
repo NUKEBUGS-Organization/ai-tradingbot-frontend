@@ -37,7 +37,7 @@ export default function TelegramPanel() {
     setBroadcastResult(null);
     try {
       const result = await api.broadcastMessage(testMessage);
-      setBroadcastResult({ success: true, message: `Sent to ${result?.sent || 0} recipients` });
+      setBroadcastResult({ success: true, message: `Sent to ${result?.recipients || result?.sent || 0} recipients` });
       setTestMessage('');
     } catch (err) {
       setBroadcastResult({ success: false, message: 'Failed to send message' });
