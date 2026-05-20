@@ -351,6 +351,13 @@ export const api = {
     );
   },
 
+  broadcastMessage: async (message) => {
+    return protectedFetch(`${API_BASE}/admin/broadcast`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+  },
+
   // —— Subscriptions ——
   getPlans: async () => {
     return protectedFetch(`${API_BASE}/subscriptions/plans`, {}, []);

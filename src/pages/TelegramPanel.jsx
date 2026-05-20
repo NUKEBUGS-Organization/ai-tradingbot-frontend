@@ -1,31 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import { Send, ShieldCheck, Radio, Check, AlertTriangle, Zap, Shield, TrendingUp } from 'lucide-react';
+import { Send, ShieldCheck, Radio, Check, AlertTriangle, Zap, Shield, TrendingUp, Users, MessageSquare, RefreshCw } from 'lucide-react';
 import api from '../services/api';
 
 export default function TelegramPanel() {
-  const [status, setStatus] = useState('Checking...');
+  const [engineStatus, setEngineStatus] = useState(null);
+  const [telegramStatus, setTelegramStatus] = useState(null);
   const [testMessage, setTestMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [broadcastResult, setBroadcastResult] = useState(null);
+
+  const loadStatus = async () => {
+    setLoading(true);
+    try {
+      const status = await api.getEngineStatus();
+      setEngineStatus(status);
+      setTelegramStatus(status?.telegram || null);
+    } catch (err) {
+      console.error('Failed to load engine status:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Check backend connection status for Telegram Bot
-    setTimeout(() => {
-      setStatus('Online (Configured via Server)');
-    }, 1000);
+    loadStatus();
+    const interval = setInterval(loadStatus, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSendTest = async () => {
-    if (!testMessage) return;
+    if (!testMessage.trim()) return;
     setSending(true);
-    // Mock the send request
-    setTimeout(() => {
-      setSending(false);
+    setBroadcastResult(null);
+    try {
+      const result = await api.broadcastMessage(testMessage);
+      setBroadcastResult({ success: true, message: `Sent to ${result?.sent || 0} recipients` });
       setTestMessage('');
-      alert('Test message sent successfully to Admin channel!');
-    }, 1000);
+    } catch (err) {
+      setBroadcastResult({ success: false, message: 'Failed to send message' });
+    } finally {
+      setSending(false);
+    }
   };
+
+  const isConnected = telegramStatus?.is_running && telegramStatus?.token_configured;
 
   const alerts = [
     { label: 'Trade Opened', desc: 'Notify when a new trade is opened', enabled: true, icon: <TrendingUp size={14} /> },
@@ -35,115 +56,148 @@ export default function TelegramPanel() {
     { label: 'Daily Summary', desc: 'End of day performance report', enabled: false, icon: <Shield size={14} /> }
   ];
 
-  const recentMessages = [
-    { time: '14:32', msg: '✅ BUY XAUUSD @ 2365.50 | Lot: 0.15 | SL: 2353.50 | TP: 2385.50', type: 'trade' },
-    { time: '14:28', msg: '🤖 AI Signal: SELL XAUUSD | Confidence: 87% | Quality: 8.2/10', type: 'signal' },
-    { time: '13:45', msg: '💰 Trade Closed: XAUUSD +$342.50 | Duration: 47m', type: 'profit' },
-    { time: '12:10', msg: '⚠️ Risk Alert: Daily drawdown at 3.8% (Max: 5%)', type: 'warning' },
-    { time: '09:00', msg: '📊 Daily Summary: +$1,250.75 | Win Rate: 80% | 5/5 trades', type: 'summary' },
-  ];
-
-  const msgColor = { trade: '#58a6ff', signal: '#d4af37', profit: '#3fb950', warning: '#f0883e', summary: '#a78bfa' };
-
   return (
     <div className="app-layout">
       <Sidebar />
       <main className="main-content">
         <Header title="Telegram System (Admin)" />
         <div className="page-content">
+
+          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: 24 }}>
+            <div className="stat-card">
+              <div className="stat-card-header">
+                <span className="stat-card-label">Bot Status</span>
+                <div className="stat-card-icon green"><Radio size={16} /></div>
+              </div>
+              <div className="stat-card-value" style={{ fontSize: 18 }}>
+                {loading ? 'Checking...' : isConnected ? 'Online' : 'Offline'}
+              </div>
+              <div className="stat-card-change" style={{ color: isConnected ? '#3fb950' : '#f85149' }}>
+                {loading ? '...' : isConnected ? 'Token configured' : 'Not configured'}
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-card-header">
+                <span className="stat-card-label">Subscribers</span>
+                <div className="stat-card-icon blue"><Users size={16} /></div>
+              </div>
+              <div className="stat-card-value">{loading ? '...' : telegramStatus?.subscribers ?? 0}</div>
+              <div className="stat-card-change" style={{ color: '#8b949e' }}>Active subscriptions</div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-card-header">
+                <span className="stat-card-label">Messages Sent</span>
+                <div className="stat-card-icon gold"><MessageSquare size={16} /></div>
+              </div>
+              <div className="stat-card-value">{loading ? '...' : telegramStatus?.messages_sent ?? 0}</div>
+              <div className="stat-card-change" style={{ color: '#8b949e' }}>This session</div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-card-header">
+                <span className="stat-card-label">Telegram Library</span>
+                <div className="stat-card-icon purple"><ShieldCheck size={16} /></div>
+              </div>
+              <div className="stat-card-value" style={{ fontSize: 18 }}>
+                {loading ? '...' : telegramStatus?.telegram_available ? 'Available' : 'Missing'}
+              </div>
+              <div className="stat-card-change" style={{ color: telegramStatus?.telegram_available ? '#3fb950' : '#f85149' }}>
+                python-telegram-bot
+              </div>
+            </div>
+          </div>
+
           <div className="grid-2">
-            
             <div className="card">
               <div className="card-header">
                 <span className="card-title"><ShieldCheck size={16} /> Admin Bot Status</span>
-                <span className="badge badge-green">Connected</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button onClick={loadStatus} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8b949e' }}>
+                    <RefreshCw size={14} />
+                  </button>
+                  <span className={`badge ${isConnected ? 'badge-green' : 'badge-red'}`}>
+                    {isConnected ? 'Connected' : 'Disconnected'}
+                  </span>
+                </div>
               </div>
               <div className="card-body">
                 <div style={{ marginBottom: 20 }}>
-                  <p style={{ color: '#8b949e', fontSize: 13, lineHeight: '1.6' }}>
-                    The Telegram Bot is configured securely via the backend server's `.env` variables. 
-                    Tokens and Chat IDs are no longer stored in the database or exposed to the frontend for maximum security.
-                  </p>
-                </div>
-                
-                <div className="form-group" style={{ background: 'var(--bg-primary)', padding: 15, borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <span style={{ fontSize: 13, color: '#8b949e' }}>System Connection</span>
-                    <span style={{ color: '#3fb950', display: 'flex', alignItems: 'center', gap: 6 }}><Radio size={12}/> {status}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 13, color: '#8b949e' }}>Trade Execution Alerts</span>
-                    <span style={{ color: '#3fb950' }}>Active</span>
-                  </div>
-                </div>
-
-                <h4 style={{ marginTop: 24, marginBottom: 12, fontSize: 14, color: '#c9d1d9' }}>Alert Preferences</h4>
-                {alerts.map((a, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: i < alerts.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ color: '#d4af37' }}>{a.icon}</span>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600 }}>{a.label}</div>
-                        <div style={{ fontSize: 10, color: '#545d68' }}>{a.desc}</div>
+                  {alerts.map((a, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: i < alerts.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ color: '#d4af37' }}>{a.icon}</div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600 }}>{a.label}</div>
+                          <div style={{ fontSize: 11, color: '#545d68' }}>{a.desc}</div>
+                        </div>
                       </div>
-                    </div>
-                    <label className="toggle">
-                      <input type="checkbox" defaultChecked={a.enabled} />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="card" style={{ marginBottom: 20 }}>
-                <div className="card-header">
-                  <span className="card-title"><Send size={16} /> Test Broadcast</span>
-                </div>
-                <div className="card-body">
-                  <p style={{ color: '#8b949e', fontSize: 13, marginBottom: 15 }}>
-                    Send a test message directly to the configured Admin Telegram channel to verify connectivity.
-                  </p>
-                  <div className="form-group">
-                    <label className="form-label">Message</label>
-                    <textarea 
-                      className="form-input" 
-                      rows={3} 
-                      placeholder="Enter test message..."
-                      value={testMessage}
-                      onChange={(e) => setTestMessage(e.target.value)}
-                    />
-                  </div>
-                  <button 
-                    className="btn btn-primary" 
-                    onClick={handleSendTest}
-                    disabled={sending || !testMessage}
-                    style={{ width: '100%', justifyContent: 'center' }}
-                  >
-                    {sending ? 'Sending...' : <><Send size={14} /> Send to Admin Channel</>}
-                  </button>
-                </div>
-              </div>
-
-              <div className="card">
-                <div className="card-header">
-                  <span className="card-title"><Send size={16} /> Recent Messages Sent</span>
-                  <span className="badge badge-blue">{recentMessages.length} messages</span>
-                </div>
-                <div className="card-body">
-                  {recentMessages.map((m, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: i < recentMessages.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                      <div style={{ fontSize: 11, color: '#545d68', fontFamily: 'var(--font-mono)', minWidth: 44, paddingTop: 2 }}>{m.time}</div>
-                      <div style={{ flex: 1, fontSize: 12.5, color: '#e6edf3', lineHeight: 1.5, borderLeft: `2px solid ${msgColor[m.type]}`, paddingLeft: 12 }}>
-                        {m.msg}
-                      </div>
+                      <label className="toggle">
+                        <input type="checkbox" defaultChecked={a.enabled} />
+                        <span className="toggle-slider"></span>
+                      </label>
                     </div>
                   ))}
                 </div>
+
+                <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
+                  <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 8 }}>Broadcast Message</div>
+                  <textarea
+                    value={testMessage}
+                    onChange={e => setTestMessage(e.target.value)}
+                    placeholder="Type a message to broadcast to all subscribers..."
+                    style={{ width: '100%', minHeight: 80, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-sm)', padding: 10, color: 'var(--text-primary)', fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
+                  />
+                  {broadcastResult && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: broadcastResult.success ? '#3fb950' : '#f85149' }}>
+                      {broadcastResult.message}
+                    </div>
+                  )}
+                  <button
+                    onClick={handleSendTest}
+                    disabled={sending || !testMessage.trim() || !isConnected}
+                    className="btn btn-primary"
+                    style={{ marginTop: 10, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                  >
+                    <Send size={14} />
+                    {sending ? 'Sending...' : 'Send Broadcast'}
+                  </button>
+                  {!isConnected && (
+                    <div style={{ fontSize: 11, color: '#f85149', marginTop: 6, textAlign: 'center' }}>
+                      Bot must be connected to send messages
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
+            <div className="card">
+              <div className="card-header">
+                <span className="card-title"><Radio size={16} /> Signal Configuration</span>
+              </div>
+              <div className="card-body">
+                <div style={{ fontSize: 13, color: '#8b949e', marginBottom: 16 }}>
+                  Signals are automatically broadcast to all subscribers when the AI engine generates a high-confidence trade signal (≥75% confidence, grades A+/A/B).
+                </div>
+                <div style={{ background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', padding: 16, border: '1px solid var(--border-subtle)', marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 4 }}>Min Confidence</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#d4af37' }}>75%</div>
+                </div>
+                <div style={{ background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', padding: 16, border: '1px solid var(--border-subtle)', marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 4 }}>Allowed Grades</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#3fb950' }}>A+, A, B</div>
+                </div>
+                <div style={{ background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', padding: 16, border: '1px solid var(--border-subtle)', marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 4 }}>Active Sessions</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>London, New York, Overlap</div>
+                </div>
+                <div style={{ background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', padding: 16, border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 4 }}>Subscriber Count</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#58a6ff' }}>{telegramStatus?.subscribers ?? 0}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
