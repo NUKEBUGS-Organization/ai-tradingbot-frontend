@@ -11,6 +11,8 @@ export default function RiskManagement() {
   const { account } = useWebSocket();
   const [activePreset, setActivePreset] = useState(null);
   const [presetLoading, setPresetLoading] = useState(false);
+  const [engineRisk, setEngineRisk] = useState(null);
+  const [mt5Account, setMt5Account] = useState(null);
   const risk = user?.riskSettings || {};
 
   useEffect(() => {
@@ -19,6 +21,23 @@ export default function RiskManagement() {
       setActivePreset(r <= 1 ? 'conservative' : r <= 3 ? 'moderate' : 'aggressive');
     }
   }, [user]);
+
+  useEffect(() => {
+    const loadEngineData = async () => {
+      try {
+        const status = await api.getEngineStatus();
+        if (status?.engine?.risk) setEngineRisk(status.engine.risk);
+        if (status?.mt5_account && Object.keys(status.mt5_account).length > 0) {
+          setMt5Account(status.mt5_account);
+        }
+      } catch (err) {
+        console.error('Failed to load engine data:', err);
+      }
+    };
+    loadEngineData();
+    const interval = setInterval(loadEngineData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handlePresetChange = async (presetLabel) => {
     const preset = presetLabel.toLowerCase();
@@ -32,15 +51,21 @@ export default function RiskManagement() {
       setPresetLoading(false);
     }
   };
-  const bal = account?.balance || user?.mt5Account?.balance || 10000;
-  const eq = account?.equity || user?.mt5Account?.equity || 10000;
+  const bal = mt5Account?.balance || account?.balance || user?.mt5Account?.balance || 10000;
+  const eq = mt5Account?.equity || account?.equity || user?.mt5Account?.equity || 10000;
   const ddPct = ((bal - eq) / bal * 100).toFixed(2);
 
+  const openPositions = mt5Account?.openPositions ?? engineRisk?.open_positions ?? 0;
+  const maxPositions = engineRisk?.max_positions || risk.maxOpenPositions || 5;
+  const dailyDD = engineRisk?.daily_drawdown_pct ?? Math.abs(((bal - eq) / bal * 100));
+  const weeklyDD = engineRisk?.weekly_drawdown_pct ?? 0;
+  const monthlyDD = engineRisk?.monthly_drawdown_pct ?? 0;
+
   const riskMetrics = [
-    { label: 'Current Exposure', value: `$${(account?.margin || user?.mt5Account?.margin || 0).toFixed(2)}`, sub: `${((account?.margin || 0) / bal * 100).toFixed(1)}% of balance`, icon: <Layers size={16} />, color: 'blue' },
-    { label: 'Daily Drawdown', value: `${Math.abs(ddPct)}%`, sub: `Max allowed: ${risk.maxDailyDrawdown || 5}%`, icon: <TrendingDown size={16} />, color: parseFloat(ddPct) > 3 ? 'red' : 'green' },
+    { label: 'Current Exposure', value: `$${(mt5Account?.margin || account?.margin || user?.mt5Account?.margin || 0).toFixed(2)}`, sub: `${((mt5Account?.margin || 0) / bal * 100).toFixed(1)}% of balance`, icon: <Layers size={16} />, color: 'blue' },
+    { label: 'Daily Drawdown', value: `${dailyDD.toFixed(2)}%`, sub: `Max allowed: ${risk.maxDailyDrawdown || 5}%`, icon: <TrendingDown size={16} />, color: dailyDD > 3 ? 'red' : 'green' },
     { label: 'Max Risk/Trade', value: `${risk.maxRiskPerTrade || 2}%`, sub: `$${(bal * (risk.maxRiskPerTrade || 2) / 100).toFixed(2)} per trade`, icon: <Target size={16} />, color: 'gold' },
-    { label: 'Open Positions', value: `${account ? '4' : '0'} / ${risk.maxOpenPositions || 5}`, sub: 'Position limit', icon: <BarChart3 size={16} />, color: 'purple' },
+    { label: 'Open Positions', value: `${openPositions} / ${maxPositions}`, sub: 'Position limit', icon: <BarChart3 size={16} />, color: 'purple' },
   ];
 
   const controls = [
@@ -140,8 +165,8 @@ export default function RiskManagement() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                 {[
                   { label: 'Daily DD', value: ddPct, max: risk.maxDailyDrawdown || 5, color: parseFloat(ddPct) > 3 ? '#f85149' : '#3fb950' },
-                  { label: 'Weekly DD', value: '2.3', max: 10, color: '#d4af37' },
-                  { label: 'Monthly DD', value: '4.1', max: 15, color: '#58a6ff' },
+                  { label: 'Weekly DD', value: weeklyDD.toFixed(1), max: 10, color: '#d4af37' },
+                  { label: 'Monthly DD', value: monthlyDD.toFixed(1), max: 15, color: '#58a6ff' },
                 ].map((item, i) => (
                   <div key={i} style={{ textAlign: 'center', padding: 20, background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)' }}>
                     <div style={{ fontSize: 28, fontWeight: 800, color: item.color, fontFamily: 'var(--font-mono)' }}>{item.value}%</div>
