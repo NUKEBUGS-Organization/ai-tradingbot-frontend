@@ -3,7 +3,7 @@
  * All protected requests send Authorization: Bearer <token>.
  */
 
-import { API_BASE } from '../config/env';
+import { API_BASE, ENGINE_BASE } from '../config/env';
 
 const getToken = () => localStorage.getItem('aurumx_token');
 

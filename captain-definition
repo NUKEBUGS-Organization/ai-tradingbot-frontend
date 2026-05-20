@@ -2,7 +2,8 @@
   "schemaVersion": 2,
   "dockerfilePath": "./Dockerfile",
   "buildArguments": {
-    "VITE_API_URL": "http://ai-tradingbot-backend.vcl4xengine.com",
-    "VITE_WS_URL": "ws://ai-tradingbot-backend.vcl4xengine.com"
+    "VITE_API_URL": "https://ai-tradingbot-backend.vcl4xengine.com",
+    "VITE_WS_URL": "wss://ai-tradingbot-backend.vcl4xengine.com",
+    "VITE_ENGINE_BASE": "https://ai-tradingbot-backend.vcl4xengine.com/api"
   }
 }

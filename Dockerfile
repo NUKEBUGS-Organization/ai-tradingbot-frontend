@@ -6,8 +6,10 @@ COPY . .
 
 ARG VITE_API_URL=https://ai-tradingbot-backend.vcl4xengine.com
 ARG VITE_WS_URL=wss://ai-tradingbot-backend.vcl4xengine.com
+ARG VITE_ENGINE_BASE=https://ai-tradingbot-backend.vcl4xengine.com/api
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_WS_URL=$VITE_WS_URL
+ENV VITE_ENGINE_BASE=$VITE_ENGINE_BASE
 
 RUN chmod +x node_modules/.bin/vite && npm run build
 
