@@ -15,6 +15,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [trades, setTrades] = useState([]);
   const [equityCurve, setEquityCurve] = useState([]);
+  const [closedTrades, setClosedTrades] = useState([]);
+  const [equityPeriod, setEquityPeriod] = useState('ALL');
   const [tab, setTab] = useState('open');
   const [mt5Live, setMt5Live] = useState(null);
   const [chartSymbol, setChartSymbol] = useState('XAUUSD');
@@ -40,6 +42,7 @@ export default function Dashboard() {
       ]);
       setStats(s);
       setTrades({ open: t.trades, closed: o.trades });
+      setClosedTrades(o.trades || []);
       setEquityCurve(e);
     } catch (err) { console.error(err); }
   };
@@ -48,6 +51,42 @@ export default function Dashboard() {
   const bal = live?.balance ?? user?.mt5Account?.balance ?? 0;
   const eq = live?.equity ?? user?.mt5Account?.equity ?? 0;
   const dailyPnl = live?.dailyPnl ?? user?.stats?.dailyPnl ?? 0;
+
+  const periodMs = { '1D': 86400000, '1W': 7 * 86400000, '1M': 30 * 86400000 };
+  const filteredCurve = equityPeriod === 'ALL'
+    ? equityCurve
+    : equityCurve.filter((pt) => {
+        const t = new Date(pt.date).getTime();
+        return t >= Date.now() - periodMs[equityPeriod];
+      });
+
+  const tradeStats = (() => {
+    const closed = closedTrades || [];
+    if (!closed.length) return null;
+    const profits = closed.map((t) => t.profit ?? 0);
+    const best = Math.max(...profits);
+    const worst = Math.min(...profits);
+    const avg = profits.reduce((a, b) => a + b, 0) / profits.length;
+    let maxWinStreak = 0;
+    let maxLossStreak = 0;
+    let winStreak = 0;
+    let lossStreak = 0;
+    const sorted = [...closed].sort(
+      (a, b) => new Date(a.closeTime || a.createdAt) - new Date(b.closeTime || b.createdAt)
+    );
+    sorted.forEach((t) => {
+      if ((t.profit ?? 0) > 0) {
+        winStreak += 1;
+        lossStreak = 0;
+        maxWinStreak = Math.max(maxWinStreak, winStreak);
+      } else {
+        lossStreak += 1;
+        winStreak = 0;
+        maxLossStreak = Math.max(maxLossStreak, lossStreak);
+      }
+    });
+    return { best, worst, avg, maxWinStreak, maxLossStreak };
+  })();
 
   const COLORS = ['#3fb950', '#f85149', '#d4af37'];
   const pieData = stats ? [
@@ -147,12 +186,24 @@ export default function Dashboard() {
             <div className="card">
               <div className="card-header">
                 <span className="card-title"><Activity size={16} /> Equity Curve</span>
-                <span className="badge badge-green">Live</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {['1D', '1W', '1M', 'ALL'].map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setEquityPeriod(p)}
+                      className={`btn ${equityPeriod === p ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ fontSize: 10, padding: '3px 8px' }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="card-body">
                 <div className="chart-container">
                   <ResponsiveContainer width="100%" height={280}>
-                    <AreaChart data={equityCurve}>
+                    <AreaChart data={filteredCurve.length ? filteredCurve : equityCurve}>
                       <defs>
                         <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#d4af37" stopOpacity={0.3} />
@@ -167,6 +218,39 @@ export default function Dashboard() {
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
+                {tradeStats && (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                      gap: 12,
+                      marginTop: 16,
+                      paddingTop: 16,
+                      borderTop: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 10, color: '#545d68' }}>Best Trade</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#3fb950' }}>+${tradeStats.best.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#545d68' }}>Worst Trade</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#f85149' }}>${tradeStats.worst.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#545d68' }}>Avg Trade</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#d4af37' }}>${tradeStats.avg.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#545d68' }}>Max Win Streak</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#3fb950' }}>{tradeStats.maxWinStreak}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#545d68' }}>Max Loss Streak</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#f85149' }}>{tradeStats.maxLossStreak}</div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="card">
