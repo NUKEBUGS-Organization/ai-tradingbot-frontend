@@ -1,45 +1,47 @@
-import { useEffect, useRef, memo } from 'react';
+import { memo, useMemo } from 'react';
 
+/** TradingView symbols that load reliably in the free embed widget */
 const TV_SYMBOLS = {
-  XAUUSD: 'OANDA:XAUUSD',
-  EURUSD: 'OANDA:EURUSD',
-  GBPUSD: 'OANDA:GBPUSD',
+  XAUUSD: 'TICKMILL:XAUUSD',
+  EURUSD: 'FX:EURUSD',
+  GBPUSD: 'FX:GBPUSD',
 };
 
+function buildEmbedUrl(symbol) {
+  const tvSymbol = TV_SYMBOLS[symbol] || TV_SYMBOLS.XAUUSD;
+  const params = new URLSearchParams({
+    symbol: tvSymbol,
+    interval: '15',
+    theme: 'dark',
+    style: '1',
+    timezone: 'Etc/UTC',
+    withdateranges: '1',
+    hide_side_toolbar: '0',
+    allow_symbol_change: '0',
+    save_image: '0',
+    backgroundColor: '#0d1117',
+    gridColor: '#1c2128',
+    locale: 'en',
+  });
+  return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
+}
+
 function TradingViewWidget({ symbol = 'XAUUSD' }) {
-  const container = useRef(null);
-
-  useEffect(() => {
-    if (!container.current) return;
-    container.current.innerHTML =
-      '<div class="tradingview-widget-container__widget" style="height:620px;min-height:620px;width:100%"></div>';
-
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.type = 'text/javascript';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: TV_SYMBOLS[symbol] || TV_SYMBOLS.XAUUSD,
-      interval: '15',
-      timezone: 'Etc/UTC',
-      theme: 'dark',
-      style: '1',
-      locale: 'en',
-      backgroundColor: '#0d1117',
-      gridColor: '#1c2128',
-      hide_top_toolbar: false,
-      hide_legend: false,
-      save_image: false,
-      calendar: false,
-      hide_volume: false,
-      support_host: 'https://www.tradingview.com',
-    });
-    container.current.appendChild(script);
-  }, [symbol]);
+  const embedUrl = useMemo(() => buildEmbedUrl(symbol), [symbol]);
 
   return (
-    <div className="live-chart-widget" ref={container} style={{ height: '620px', minHeight: '620px', width: '100%' }} />
+    <div className="live-chart-widget" style={{ height: '620px', minHeight: '620px', width: '100%' }}>
+      <iframe
+        key={symbol}
+        title={`${symbol} live chart`}
+        src={embedUrl}
+        className="live-chart-iframe"
+        style={{ width: '100%', height: '100%', border: 0, display: 'block' }}
+        allowFullScreen
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+    </div>
   );
 }
 
