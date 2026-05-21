@@ -320,6 +320,15 @@ export const api = {
     };
   },
   getEngineHealth: async () => api.getHealth(),
+
+  getAutoTradeStatus: async () =>
+    protectedFetch(`${API_BASE}/engine/auto-trade/status`, {}, { enabled: false, mt5_connected: false }),
+
+  setAutoTradeEnabled: async (enabled) =>
+    protectedFetch(`${API_BASE}/engine/auto-trade/toggle`, {
+      method: 'POST',
+      body: JSON.stringify({ enabled }),
+    }),
   updateTelegramConfig: async () => ({
     success: false,
     message: 'Telegram configuration is managed on the server.',

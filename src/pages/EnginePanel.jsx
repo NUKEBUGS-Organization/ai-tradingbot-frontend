@@ -22,6 +22,7 @@ export default function EnginePanel() {
   const [analyzing, setAnalyzing] = useState(false);
   const [backtesting, setBacktesting] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState('XAUUSD');
+  const [autoTrade, setAutoTrade] = useState({ enabled: false, mt5_connected: false });
 
   useEffect(() => {
     loadData();
@@ -44,11 +45,13 @@ export default function EnginePanel() {
       const userId = profile?._id;
       const eng = await api.getEngineStatus();
       const live = pickMt5LiveAccount(eng, wsAccount);
-      const [risk, sigList, aiTrades] = await Promise.all([
+      const [risk, sigList, aiTrades, atStatus] = await Promise.all([
         api.getEngineRisk(userId, profile, eng),
         api.getSignals(),
         api.getEngineTrades(),
+        api.getAutoTradeStatus(),
       ]);
+      setAutoTrade(atStatus || eng?.auto_trade || { enabled: false, mt5_connected: false });
       setEngineStatus(eng);
       setRiskStatus((prev) => {
         if (live) {
@@ -83,12 +86,37 @@ export default function EnginePanel() {
 
   const isConnected = engineStatus?.connected || engineStatus?.engine?.is_running;
 
+  const toggleAutoTrade = async () => {
+    const next = !autoTrade.enabled;
+    const updated = await api.setAutoTradeEnabled(next);
+    setAutoTrade(updated || { ...autoTrade, enabled: next });
+  };
+
   return (
     <div className="app-layout">
       <Sidebar />
       <main className="main-content">
         <Header title="AI Engine Control" />
         <div className="page-content">
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div className="card-header">
+              <span className="card-title">MT5 Auto-Execute</span>
+              <button
+                type="button"
+                onClick={toggleAutoTrade}
+                className={`btn ${autoTrade.enabled ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: 12, padding: '4px 12px' }}
+              >
+                {autoTrade.enabled ? 'ON — Sending trades to EA' : 'OFF'}
+              </button>
+            </div>
+            <div className="card-body" style={{ fontSize: 12, color: '#8b949e' }}>
+              When ON, approved signals are sent to the client MT5 Expert Advisor for execution.
+              Requires EA attached with <strong style={{ color: '#d4af37' }}>Auto Execute Signals</strong> enabled
+              and MT5 bridge connected ({autoTrade.mt5_connected || engineStatus?.mt5_bridge?.connected ? 'connected' : 'disconnected'}).
+            </div>
+          </div>
+
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             <div className="stat-card">
               <div className="stat-card-header">
@@ -227,6 +255,23 @@ export default function EnginePanel() {
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>Session:</span> <strong>{analysis.signal.session}</strong></div>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>AMD Phase:</span> <strong>{analysis.signal.amd_phase || '-'}</strong></div>
                         </div>
+                      </div>
+                    )}
+                    {analysis.mt5_execution && (
+                      <div
+                        style={{
+                          marginTop: 12,
+                          padding: 10,
+                          background: '#0d1117',
+                          borderRadius: 8,
+                          fontSize: 12,
+                          color: analysis.mt5_execution.sent ? '#3fb950' : '#8b949e',
+                        }}
+                      >
+                        MT5 execution:{' '}
+                        {analysis.mt5_execution.sent
+                          ? 'Signal sent to EA — check MT5 Experts tab'
+                          : analysis.mt5_execution.reason || 'Not sent'}
                       </div>
                     )}
                     {analysis.reason && (
