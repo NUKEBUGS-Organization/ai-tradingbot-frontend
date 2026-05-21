@@ -4,11 +4,14 @@ import Header from '../components/Header';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
 import { Brain, TrendingUp, TrendingDown, Minus, Activity, Gauge, Clock, BarChart3, Zap, Eye } from 'lucide-react';
+import SignalDetailModal from '../components/SignalDetailModal';
+import { GradeBadge, SessionBadge, AmdPhaseBadge, H4BiasIndicator, RiskBadge } from '../components/signalBadges';
 
 export default function AISignals() {
   const { signals: liveSignals } = useWebSocket();
   const [signals, setSignals] = useState([]);
   const [analysis, setAnalysis] = useState(null);
+  const [selectedSignal, setSelectedSignal] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -122,27 +125,41 @@ export default function AISignals() {
             <div className="card-body" style={{ padding: 0 }}>
               <div className="table-container">
                 <table>
-                  <thead><tr><th>Symbol</th><th>Direction</th><th>Entry</th><th>SL</th><th>TP</th><th>Confidence</th><th>Quality</th><th>Strategy</th><th>Bias</th><th>Session</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP</th>
+                      <th>Conf</th><th>Grade</th><th>AMD</th><th>H4</th><th>Session</th><th>Risk</th><th>Reason</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {signals.map(s => (
-                      <tr key={s._id}>
+                      <tr
+                        key={s._id}
+                        onClick={() => setSelectedSignal(s)}
+                        style={{ cursor: 'pointer' }}
+                        title="Click for details"
+                      >
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{s.symbol}</td>
                         <td><span className={`badge ${s.direction === 'BUY' ? 'badge-green' : s.direction === 'SELL' ? 'badge-red' : 'badge-blue'}`}>{s.direction}</span></td>
-                        <td>{s.entryPrice}</td>
-                        <td style={{ color: '#f85149' }}>{s.stopLoss}</td>
-                        <td style={{ color: '#3fb950' }}>{s.takeProfit}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.entryPrice ?? s.entry ?? '—'}</td>
+                        <td style={{ color: '#f85149', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.stopLoss ?? s.sl ?? '—'}</td>
+                        <td style={{ color: '#3fb950', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.takeProfit ?? s.tp ?? '—'}</td>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div className="signal-bar" style={{ flex: 1, height: 4 }}>
-                              <div className="signal-bar-fill" style={{ width: `${s.confidence}%`, background: s.confidence > 70 ? '#3fb950' : s.confidence > 50 ? '#d4af37' : '#f85149' }}></div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div className="signal-bar" style={{ flex: 1, height: 4, minWidth: 40 }}>
+                              <div className="signal-bar-fill" style={{ width: `${s.confidence}%`, background: s.confidence >= 85 ? '#d4af37' : s.confidence > 70 ? '#3fb950' : s.confidence > 50 ? '#d4af37' : '#f85149' }} />
                             </div>
                             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.confidence}%</span>
                           </div>
                         </td>
-                        <td style={{ fontFamily: 'var(--font-mono)', color: '#d4af37' }}>{s.qualityScore}</td>
-                        <td><span className="badge badge-gold">{s.strategy}</span></td>
-                        <td style={{ color: biasColor[s.marketBias], textTransform: 'uppercase', fontSize: 11, fontWeight: 600 }}>{s.marketBias}</td>
-                        <td style={{ textTransform: 'uppercase', fontSize: 11 }}>{s.session}</td>
+                        <td><GradeBadge grade={s.grade || (s.confidence >= 85 ? 'A+' : s.confidence >= 75 ? 'A' : 'B')} /></td>
+                        <td><AmdPhaseBadge phase={s.amdPhase || s.amd_phase} /></td>
+                        <td><H4BiasIndicator bias={s.marketBias || s.h4Bias} /></td>
+                        <td><SessionBadge session={s.session} /></td>
+                        <td><RiskBadge level={s.riskLevel || s.risk_level} /></td>
+                        <td style={{ fontSize: 11, color: '#8b949e', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {s.reason || s.strategy || '—'}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -151,6 +168,7 @@ export default function AISignals() {
             </div>
           </div>
         </div>
+        <SignalDetailModal signal={selectedSignal} onClose={() => setSelectedSignal(null)} />
       </main>
     </div>
   );
