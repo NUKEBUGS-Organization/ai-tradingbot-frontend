@@ -176,7 +176,7 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
-            <div className="card-body" style={{ padding: 0 }}>
+            <div className="card-body live-chart-body" style={{ padding: 0 }}>
               <TradingViewWidget symbol={chartSymbol} />
             </div>
           </div>

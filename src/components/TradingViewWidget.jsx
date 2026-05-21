@@ -12,7 +12,7 @@ function TradingViewWidget({ symbol = 'XAUUSD' }) {
   useEffect(() => {
     if (!container.current) return;
     container.current.innerHTML =
-      '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
+      '<div class="tradingview-widget-container__widget" style="height:620px;min-height:620px;width:100%"></div>';
 
     const script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
@@ -39,11 +39,7 @@ function TradingViewWidget({ symbol = 'XAUUSD' }) {
   }, [symbol]);
 
   return (
-    <div
-      className="tradingview-widget-container"
-      ref={container}
-      style={{ height: '500px', width: '100%' }}
-    />
+    <div className="live-chart-widget" ref={container} style={{ height: '620px', minHeight: '620px', width: '100%' }} />
   );
 }
 
