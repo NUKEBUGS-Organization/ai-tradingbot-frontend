@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LANDING_URL } from '../config/env';
+import BrandLogo from '../components/BrandLogo';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -68,7 +69,7 @@ export default function Register() {
       </div>
       <div className="login-card animate-in">
         <div className="login-header">
-          <div className="login-logo">Ax</div>
+          <BrandLogo size={56} className="login-logo-img" />
           <h1 className="login-title">Create Account</h1>
           <p className="login-subtitle">Join AurumX Trading Platform</p>
         </div>

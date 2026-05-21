@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, Shield, Brain, MessageCircle, CreditCard, Activity, Users, LogOut, BarChart3, Cpu, History } from 'lucide-react';
+import BrandLogo from './BrandLogo';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -30,7 +31,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">Ax</div>
+          <BrandLogo size={36} className="sidebar-logo-img" />
           <div className="sidebar-logo-text">Aurum<span>X</span></div>
         </div>
       </div>
