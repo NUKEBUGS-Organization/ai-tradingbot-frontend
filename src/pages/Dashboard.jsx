@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import TradingViewWidget from '../components/TradingViewWidget';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [equityCurve, setEquityCurve] = useState([]);
   const [tab, setTab] = useState('open');
   const [mt5Live, setMt5Live] = useState(null);
+  const [chartSymbol, setChartSymbol] = useState('XAUUSD');
 
   useEffect(() => {
     loadData();
@@ -115,6 +117,28 @@ export default function Dashboard() {
               </div>
               <div className="stat-card-value negative">{user?.stats?.maxDrawdown || 0}%</div>
               <div className="stat-card-change down">Peak to trough</div>
+            </div>
+          </div>
+
+          <div className="card" style={{ marginBottom: 24 }}>
+            <div className="card-header">
+              <span className="card-title">Live Chart</span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {['XAUUSD', 'EURUSD', 'GBPUSD'].map((sym) => (
+                  <button
+                    key={sym}
+                    type="button"
+                    onClick={() => setChartSymbol(sym)}
+                    className={`btn ${chartSymbol === sym ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ fontSize: 11, padding: '4px 10px' }}
+                  >
+                    {sym}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="card-body" style={{ padding: 0 }}>
+              <TradingViewWidget symbol={chartSymbol} />
             </div>
           </div>
 
