@@ -234,6 +234,66 @@ export default function EnginePanel() {
                         <AlertTriangle size={14} /> {analysis.reason}
                       </div>
                     )}
+                    {analysis.confidence !== undefined && (
+                      <div className="card" style={{ marginTop: 16, border: '1px solid #21262d' }}>
+                        <div className="card-header">
+                          <span className="card-title">Confidence Breakdown</span>
+                          <span
+                            style={{
+                              color: analysis.confidence >= 85 ? '#d4af37' : analysis.confidence >= 75 ? '#3fb950' : '#8b949e',
+                              fontWeight: 700,
+                              fontSize: 18,
+                            }}
+                          >
+                            {analysis.confidence}% — {analysis.analysis?.score?.grade || analysis.signal?.grade || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="card-body">
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
+                            {analysis.analysis?.score?.factors &&
+                              Object.entries(analysis.analysis.score.factors).map(([key, val]) => (
+                                <div key={key} style={{ background: '#0d1117', borderRadius: 8, padding: 12 }}>
+                                  <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>
+                                    {key.replace(/_/g, ' ').toUpperCase()}
+                                  </div>
+                                  <div style={{ fontSize: 14, fontWeight: 600, color: '#d4af37' }}>
+                                    {typeof val === 'number' ? `${val}%` : String(val)}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                          {analysis.analysis?.amd && (
+                            <div style={{ marginTop: 12, padding: 12, background: '#0d1117', borderRadius: 8 }}>
+                              <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 8 }}>AMD Phase Analysis</div>
+                              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: 13 }}>
+                                  Phase:{' '}
+                                  <strong style={{ color: '#f0883e' }}>
+                                    {analysis.analysis.amd.current_phase || 'N/A'}
+                                  </strong>
+                                </span>
+                                <span style={{ fontSize: 13 }}>
+                                  H4 Bias:{' '}
+                                  <strong style={{ color: '#58a6ff' }}>
+                                    {analysis.analysis.h4_bias?.bias || 'N/A'}
+                                  </strong>
+                                </span>
+                                <span style={{ fontSize: 13 }}>
+                                  Direction:{' '}
+                                  <strong
+                                    style={{
+                                      color: analysis.signal?.type === 'BUY' ? '#3fb950' : '#f85149',
+                                    }}
+                                  >
+                                    {analysis.signal?.type || 'No Signal'}
+                                  </strong>
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div style={{ textAlign: 'center', color: '#545d68', padding: 40 }}>
