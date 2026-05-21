@@ -266,6 +266,15 @@ export const api = {
     );
   },
 
+  getEngineCandles: async (symbol, { timeframe = 'M15', limit = 150 } = {}) => {
+    const qs = new URLSearchParams({ timeframe, limit: String(limit) }).toString();
+    return protectedFetch(
+      `${API_BASE}/engine/candles/${encodeURIComponent(symbol)}?${qs}`,
+      {},
+      null
+    );
+  },
+
   getEngineTrades: async () => {
     const result = await protectedFetch(`${API_BASE}/engine/trades`, {}, []);
     return Array.isArray(result) ? result : [];

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import TradingViewWidget from '../components/TradingViewWidget';
+import LiveChart from '../components/LiveChart';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
@@ -177,7 +177,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="card-body live-chart-body" style={{ padding: 0 }}>
-              <TradingViewWidget symbol={chartSymbol} />
+              <LiveChart symbol={chartSymbol} />
             </div>
           </div>
 
