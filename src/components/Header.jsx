@@ -20,7 +20,14 @@ export default function Header({ title }) {
       <div className="top-bar-left">
         <h1 className="page-title">{title}</h1>
         <div className="live-indicator">
-          <span className="live-dot"></span>
+          <span
+            className="live-dot"
+            style={{
+              background: connected ? (isMt5 ? '#3fb950' : '#8b949e') : '#f85149',
+              boxShadow: connected && isMt5 ? '0 0 8px #3fb950' : 'none',
+            }}
+            title={connected ? (isMt5 ? 'MT5 live prices' : 'Simulated / candle estimate') : 'Disconnected'}
+          />
           {connected ? (isMt5 ? 'MT5 LIVE' : 'SIM') : 'OFFLINE'}
         </div>
       </div>
@@ -32,8 +39,20 @@ export default function Header({ title }) {
             const prev = prevBids.current[key];
             const dir = bid != null && prev != null ? (bid >= prev ? 'up' : 'down') : '';
             if (bid != null) prevBids.current[key] = bid;
+            const hasLive = bid != null && isMt5;
             return (
               <div className="ticker-item" key={key}>
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: hasLive ? '#3fb950' : connected ? '#8b949e' : '#545d68',
+                    flexShrink: 0,
+                    marginRight: 4,
+                  }}
+                  title={hasLive ? 'MT5' : connected ? 'No quote yet' : 'Offline'}
+                />
                 <span className="ticker-symbol">{label}</span>
                 <span className={`ticker-price ${dir}`}>
                   {bid != null ? bid.toFixed(decimals) : '—'}
