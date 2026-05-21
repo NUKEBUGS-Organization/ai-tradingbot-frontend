@@ -1,25 +1,18 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { normalizeMt5Prices, hasLiveMt5Tickers } from '../utils/mt5Prices';
 
-/** Poll engine status for mt5_prices when WebSocket has not received MT5 quotes yet. */
+/** Live MT5 quotes for header tickers — polls engine when WebSocket has no valid live feed. */
 export function useMt5Prices(wsPrices, priceSource) {
   const [enginePrices, setEnginePrices] = useState(null);
 
   useEffect(() => {
-    if (priceSource === 'mt5') return undefined;
-
     const poll = async () => {
       try {
         const eng = await api.getEngineStatus();
-        const p = eng?.mt5_prices || eng?.mt5_bridge?.prices;
-        if (p && Object.keys(p).length > 0) {
-          const mapped = { ...p };
-          for (const [sym, q] of Object.entries(p)) {
-            if (sym.endsWith('m') || sym.endsWith('.')) {
-              const base = sym.replace(/m$|\.$/, '');
-              if (!mapped[base]) mapped[base] = q;
-            }
-          }
+        const raw = eng?.mt5_prices;
+        const mapped = normalizeMt5Prices(raw);
+        if (hasLiveMt5Tickers(mapped)) {
           setEnginePrices(mapped);
         }
       } catch (_) {
@@ -28,11 +21,18 @@ export function useMt5Prices(wsPrices, priceSource) {
     };
 
     poll();
-    const id = setInterval(poll, 5000);
+    const id = setInterval(poll, 3000);
     return () => clearInterval(id);
-  }, [priceSource]);
+  }, []);
 
-  if (priceSource === 'mt5') return wsPrices;
-  if (enginePrices) return { ...wsPrices, ...enginePrices };
-  return wsPrices;
+  const wsNormalized = normalizeMt5Prices(wsPrices);
+  if (priceSource === 'mt5' && hasLiveMt5Tickers(wsNormalized)) {
+    return { ...wsNormalized };
+  }
+  if (enginePrices && hasLiveMt5Tickers(enginePrices)) {
+    return { ...wsNormalized, ...enginePrices };
+  }
+  return wsNormalized;
 }
+
+export { hasLiveMt5Tickers };

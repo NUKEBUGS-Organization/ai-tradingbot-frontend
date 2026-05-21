@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LANDING_URL } from '../config/env';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const data = await login(email, password);
+      const data = await login(email, password, remember);
       navigate(data.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
       setError(err.message);
@@ -69,7 +70,9 @@ export default function Login() {
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
               Remember me
             </label>
-            <a href="#" className="login-forgot">Forgot password?</a>
+            <a href={`${LANDING_URL}/#support`} className="login-forgot">
+              Need help?
+            </a>
           </div>
           <button id="login-submit" type="submit" className="login-btn" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
@@ -77,8 +80,21 @@ export default function Login() {
         </form>
 
         <div className="login-footer">
-          Don't have an account? <Link to="/register">Create one</Link>
+          Don&apos;t have an account? <Link to="/register">Create one</Link>
         </div>
+        <p style={{ marginTop: 12, fontSize: 10, color: '#545d68', textAlign: 'center' }}>
+          <a href={`${LANDING_URL}/privacy`} target="_blank" rel="noopener noreferrer" style={{ color: '#8b949e' }}>
+            Privacy
+          </a>
+          {' · '}
+          <a href={`${LANDING_URL}/terms`} target="_blank" rel="noopener noreferrer" style={{ color: '#8b949e' }}>
+            Terms
+          </a>
+          {' · '}
+          <a href={`${LANDING_URL}/refund`} target="_blank" rel="noopener noreferrer" style={{ color: '#8b949e' }}>
+            Refund
+          </a>
+        </p>
 
         <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(212,175,55,0.06)', borderRadius: 8, border: '1px solid rgba(212,175,55,0.15)' }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: '#d4af37', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Demo Credentials</div>

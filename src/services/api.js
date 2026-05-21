@@ -3,7 +3,7 @@
  * All protected requests send Authorization: Bearer <token>.
  */
 
-import { API_BASE, ENGINE_BASE } from '../config/env';
+import { API_BASE, ENGINE_BASE, ALLOW_MOCK_AUTH } from '../config/env';
 import { pickMt5LiveAccount, mapRiskSettingsForUi } from '../utils/tradeMetrics';
 
 const getToken = () => localStorage.getItem('aurumx_token');
@@ -42,18 +42,25 @@ const protectedFetch = async (url, options = {}, fallback = null) => {
   return result ?? fallback;
 };
 
-/** Public route — no JWT required */
-const publicFetch = async (url, options = {}, fallback = null) => {
+/** Public route — no JWT required; throws on API error responses */
+const publicFetch = async (url, options = {}) => {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
-  try {
-    const res = await fetch(url, { ...options, headers });
-    const text = await res.text();
-    if (!text) return fallback;
-    return JSON.parse(text);
-  } catch (err) {
-    console.error('API Error:', err);
-    return fallback;
+  const res = await fetch(url, { ...options, headers });
+  const text = await res.text();
+  let data = {};
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
   }
+  if (!res.ok) {
+    const err = new Error(data.message || `Request failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
 };
 
 const mockUser = {
@@ -149,24 +156,32 @@ function buildEquityCurveFromTrades(closedTrades, startBalance = 10000) {
 export const api = {
   // —— Auth (public except /me) ——
   login: async (email, password) => {
-    const result = await publicFetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    if (result?.token) return result;
-    if (email === 'admin@aurumx.com') return { ...mockAdmin, token: 'mock-admin-token' };
-    if (email === 'demo@aurumx.com' || email === 'demo@gmail.com') {
-      return { ...mockUser, email, token: 'mock-user-token' };
+    try {
+      return await publicFetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+    } catch (err) {
+      if (!ALLOW_MOCK_AUTH) throw err;
+      if (email === 'admin@aurumx.com' && password === 'AdminX@2026!#') {
+        return { ...mockAdmin, token: 'mock-admin-token' };
+      }
+      if (email === 'demo@aurumx.com' && password === 'DemoX@2026!#') {
+        return { ...mockUser, token: 'mock-user-token' };
+      }
+      throw err;
     }
-    return null;
   },
 
-  register: async (name, email, password) => {
-    const result = await publicFetch(`${API_BASE}/auth/register`, {
+  register: async (name, email, password, acceptTerms = true) => {
+    return publicFetch(`${API_BASE}/auth/register`, {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, acceptTerms }),
     });
-    return result || { ...mockUser, name, email, token: 'mock-user-token' };
+  },
+
+  logout: async () => {
+    await protectedFetch(`${API_BASE}/auth/logout`, { method: 'POST' }, {});
   },
 
   getProfile: async () => {
@@ -180,7 +195,11 @@ export const api = {
 
   // —— Health (public) ——
   getHealth: async () => {
-    return publicFetch(`${API_BASE}/health`, {}, { status: 'unknown' });
+    try {
+      return await publicFetch(`${API_BASE}/health`);
+    } catch {
+      return { status: 'unknown' };
+    }
   },
 
   // —— Trades ——
@@ -329,6 +348,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ enabled }),
     }),
+
+  testFireTrade: async (symbol = 'XAUUSD', direction = 'BUY') =>
+    protectedFetch(`${API_BASE}/engine/test-fire-trade`, {
+      method: 'POST',
+      body: JSON.stringify({ symbol, direction }),
+    }),
   updateTelegramConfig: async () => ({
     success: false,
     message: 'Telegram configuration is managed on the server.',
@@ -387,11 +412,14 @@ export const api = {
 
   // —— Licenses ——
   validateLicense: async (licenseKey, hwid = '') => {
-    return publicFetch(
-      `${API_BASE}/licenses/validate`,
-      { method: 'POST', body: JSON.stringify({ licenseKey, hwid }) },
-      { valid: false }
-    );
+    try {
+      return await publicFetch(`${API_BASE}/licenses/validate`, {
+        method: 'POST',
+        body: JSON.stringify({ licenseKey, hwid }),
+      });
+    } catch {
+      return { valid: false };
+    }
   },
 
   getLicenses: async () => {

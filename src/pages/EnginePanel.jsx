@@ -22,6 +22,9 @@ export default function EnginePanel() {
   const [analyzing, setAnalyzing] = useState(false);
   const [backtesting, setBacktesting] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState('XAUUSD');
+  const [testFireSymbol, setTestFireSymbol] = useState('XAUUSD');
+  const [testFireDirection, setTestFireDirection] = useState('BUY');
+  const [testFiring, setTestFiring] = useState(false);
   const [autoTrade, setAutoTrade] = useState({ enabled: false, mt5_connected: false });
 
   useEffect(() => {
@@ -92,6 +95,23 @@ export default function EnginePanel() {
     setAutoTrade(updated || { ...autoTrade, enabled: next });
   };
 
+  const testFireSymbols =
+    autoTrade.symbols?.length > 0 ? autoTrade.symbols : ANALYZE_SYMBOLS;
+
+  const handleTestFireTrade = async () => {
+    setTestFiring(true);
+    try {
+      const result = await api.testFireTrade(testFireSymbol, testFireDirection);
+      alert(
+        result?.sent
+          ? `Test ${testFireDirection} sent for ${testFireSymbol}. Check MT5 Experts tab for ticket or rejection reason.`
+          : `Not sent: ${result?.reason || result?.message || 'unknown error'}`
+      );
+    } finally {
+      setTestFiring(false);
+    }
+  };
+
   return (
     <div className="app-layout">
       <Sidebar />
@@ -101,19 +121,95 @@ export default function EnginePanel() {
           <div className="card" style={{ marginBottom: 16 }}>
             <div className="card-header">
               <span className="card-title">MT5 Auto-Execute</span>
-              <button
-                type="button"
-                onClick={toggleAutoTrade}
-                className={`btn ${autoTrade.enabled ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ fontSize: 12, padding: '4px 12px' }}
-              >
-                {autoTrade.enabled ? 'ON — Sending trades to EA' : 'OFF'}
-              </button>
+              <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={toggleAutoTrade}
+                  className={`btn ${autoTrade.enabled ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ fontSize: 12, padding: '4px 12px' }}
+                  title="When ON, AI-approved signals are sent to MT5 automatically"
+                >
+                  Auto-Execute {autoTrade.enabled ? 'ON' : 'OFF'}
+                </button>
+              </span>
             </div>
             <div className="card-body" style={{ fontSize: 12, color: '#8b949e' }}>
-              When ON, approved signals are sent to the client MT5 Expert Advisor for execution.
-              Requires EA attached with <strong style={{ color: '#d4af37' }}>Auto Execute Signals</strong> enabled
-              and MT5 bridge connected ({autoTrade.mt5_connected || engineStatus?.mt5_bridge?.connected ? 'connected' : 'disconnected'}).
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 10,
+                  alignItems: 'center',
+                  marginBottom: 10,
+                  paddingBottom: 10,
+                  borderBottom: '1px solid #21262d',
+                }}
+              >
+                <span style={{ color: '#d4af37', fontWeight: 600 }}>MT5 connection test</span>
+                <span style={{ color: '#545d68', fontSize: 11 }}>
+                  (one manual order — does not use AI signals)
+                </span>
+                <select
+                  value={testFireSymbol}
+                  onChange={(e) => setTestFireSymbol(e.target.value)}
+                  aria-label="Test trade symbol"
+                  style={{
+                    background: '#161b22',
+                    border: '1px solid #21262d',
+                    color: '#e6edf3',
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    fontSize: 12,
+                  }}
+                >
+                  {testFireSymbols.map((sym) => (
+                    <option key={sym} value={sym}>
+                      {sym}
+                    </option>
+                  ))}
+                </select>
+                <span style={{ display: 'inline-flex', gap: 4 }}>
+                  {['BUY', 'SELL'].map((dir) => (
+                    <button
+                      key={dir}
+                      type="button"
+                      onClick={() => setTestFireDirection(dir)}
+                      className={`btn ${testFireDirection === dir ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{
+                        fontSize: 12,
+                        padding: '4px 10px',
+                        color: testFireDirection === dir && dir === 'SELL' ? '#fff' : undefined,
+                        background:
+                          testFireDirection === dir && dir === 'SELL'
+                            ? '#f85149'
+                            : undefined,
+                      }}
+                    >
+                      {dir}
+                    </button>
+                  ))}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleTestFireTrade}
+                  disabled={testFiring || !(autoTrade.mt5_connected || engineStatus?.mt5_bridge?.connected)}
+                  className="btn btn-secondary"
+                  style={{ fontSize: 12, padding: '4px 12px' }}
+                >
+                  {testFiring ? 'Sending…' : `Fire ${testFireDirection} ${testFireSymbol}`}
+                </button>
+              </div>
+              <strong style={{ color: '#e6edf3' }}>Auto-Execute</strong> (OFF by default): when enabled, high-confidence
+              AI signals are sent to the EA. Leave OFF in production to avoid unintended trades.
+              <span style={{ display: 'block', marginTop: 8 }}>
+                Use <strong style={{ color: '#d4af37' }}>Fire …</strong> above to verify Python → EA → MT5 for your client.
+                Requires EA with <strong style={{ color: '#d4af37' }}>Auto Execute Signals</strong> enabled and bridge{' '}
+                {autoTrade.mt5_connected || engineStatus?.mt5_bridge?.connected ? (
+                  <span style={{ color: '#3fb950' }}>connected</span>
+                ) : (
+                  <span style={{ color: '#f85149' }}>disconnected</span>
+                )}.
+              </span>
             </div>
           </div>
 

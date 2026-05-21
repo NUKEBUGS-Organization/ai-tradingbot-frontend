@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useWebSocket } from '../services/websocket';
-import { useMt5Prices } from '../hooks/useMt5Prices';
+import { useMt5Prices, hasLiveMt5Tickers } from '../hooks/useMt5Prices';
 import { Bell, Settings } from 'lucide-react';
 
 const TICKERS = [
@@ -13,7 +13,7 @@ export default function Header({ title }) {
   const { prices: wsPrices, connected, priceSource } = useWebSocket();
   const prices = useMt5Prices(wsPrices, priceSource);
   const prevBids = useRef({});
-  const isMt5 = priceSource === 'mt5' || (prices?.XAUUSD?.bid && Math.abs(prices.XAUUSD.bid - 2365.5) > 1);
+  const isMt5 = priceSource === 'mt5' && hasLiveMt5Tickers(prices);
 
   return (
     <header className="top-bar">
@@ -26,9 +26,9 @@ export default function Header({ title }) {
               background: connected ? (isMt5 ? '#3fb950' : '#8b949e') : '#f85149',
               boxShadow: connected && isMt5 ? '0 0 8px #3fb950' : 'none',
             }}
-            title={connected ? (isMt5 ? 'MT5 live prices' : 'Simulated / candle estimate') : 'Disconnected'}
+            title={connected ? (isMt5 ? 'MT5 live prices' : 'Waiting for MT5 quotes') : 'Disconnected'}
           />
-          {connected ? (isMt5 ? 'MT5 LIVE' : 'SIM') : 'OFFLINE'}
+          {connected ? (isMt5 ? 'MT5 LIVE' : 'WAITING') : 'OFFLINE'}
         </div>
       </div>
       <div className="top-bar-right">

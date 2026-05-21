@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WS_ENDPOINT } from '../config/env';
+import { normalizeMt5Prices, hasLiveMt5Tickers } from '../utils/mt5Prices';
 
 export function useWebSocket() {
   const [prices, setPrices] = useState({
@@ -75,8 +76,11 @@ export function useWebSocket() {
               if (data.source === 'simulation') break;
               if (!data.source || data.source !== 'mt5') break;
               if (data.prices) {
-                setPrices((prev) => ({ ...prev, ...data.prices }));
-                setPriceSource('mt5');
+                const mapped = normalizeMt5Prices(data.prices);
+                if (hasLiveMt5Tickers(mapped)) {
+                  setPrices((prev) => ({ ...prev, ...mapped }));
+                  setPriceSource('mt5');
+                }
               }
               break;
             case 'account_update':
