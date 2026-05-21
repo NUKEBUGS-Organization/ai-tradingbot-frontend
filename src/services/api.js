@@ -227,6 +227,11 @@ export const api = {
     ];
   },
 
+  getSignalHistory: async () => {
+    const result = await protectedFetch(`${API_BASE}/signals/history`, {}, []);
+    return Array.isArray(result) ? result : [];
+  },
+
   /** Derived from GET /api/signals (no /signals/market-analysis route) */
   getMarketAnalysis: async () => {
     const signals = await api.getSignals();

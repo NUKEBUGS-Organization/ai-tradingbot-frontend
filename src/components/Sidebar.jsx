@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Shield, Brain, MessageCircle, CreditCard, Activity, Users, LogOut, BarChart3, Cpu } from 'lucide-react';
+import { LayoutDashboard, Shield, Brain, MessageCircle, CreditCard, Activity, Users, LogOut, BarChart3, Cpu, History } from 'lucide-react';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -13,6 +13,7 @@ export default function Sidebar() {
     { to: '/dashboard', icon: <LayoutDashboard />, label: 'Dashboard', section: 'main' },
     { to: '/engine', icon: <Cpu />, label: 'AI Engine', section: 'main' },
     { to: '/signals', icon: <Brain />, label: 'AI Signals', section: 'main' },
+    { to: '/signals/history', icon: <History />, label: 'Signal History', section: 'main' },
     { to: '/risk', icon: <Shield />, label: 'Risk Management', section: 'main' },
     { to: '/subscriptions', icon: <CreditCard />, label: 'Subscriptions', section: 'tools' },
   ];

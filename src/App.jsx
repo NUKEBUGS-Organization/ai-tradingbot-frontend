@@ -10,6 +10,7 @@ import AISignals from './pages/AISignals';
 import TelegramPanel from './pages/TelegramPanel';
 import Subscriptions from './pages/Subscriptions';
 import EnginePanel from './pages/EnginePanel';
+import SignalHistory from './pages/SignalHistory';
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, loading } = useAuth();
@@ -30,6 +31,7 @@ function App() {
           <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
           <Route path="/risk" element={<ProtectedRoute><RiskManagement /></ProtectedRoute>} />
           <Route path="/signals" element={<ProtectedRoute><AISignals /></ProtectedRoute>} />
+          <Route path="/signals/history" element={<ProtectedRoute><SignalHistory /></ProtectedRoute>} />
           <Route path="/telegram" element={<ProtectedRoute adminOnly><TelegramPanel /></ProtectedRoute>} />
           <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />
           <Route path="/engine" element={<ProtectedRoute><EnginePanel /></ProtectedRoute>} />
