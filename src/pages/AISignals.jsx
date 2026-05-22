@@ -141,7 +141,12 @@ export default function AISignals() {
                       >
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{s.symbol}</td>
                         <td><span className={`badge ${s.direction === 'BUY' ? 'badge-green' : s.direction === 'SELL' ? 'badge-red' : 'badge-blue'}`}>{s.direction}</span></td>
-                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.entryPrice ?? s.entry ?? '—'}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                          {s.entryPrice ?? s.entry ?? '—'}
+                          {(s.priceSource === 'mt5_live' || s.price_source === 'mt5_live') && (
+                            <span className="badge badge-gold" style={{ marginLeft: 4, fontSize: 9 }}>LIVE</span>
+                          )}
+                        </td>
                         <td style={{ color: '#f85149', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.stopLoss ?? s.sl ?? '—'}</td>
                         <td style={{ color: '#3fb950', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.takeProfit ?? s.tp ?? '—'}</td>
                         <td>

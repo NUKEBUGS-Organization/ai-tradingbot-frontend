@@ -26,36 +26,12 @@ export function useWebSocket() {
 
     // Do not simulate prices on the client — server/MT5 only
 
-    // Signal simulation
-    const signalInterval = setInterval(() => {
-      if (Math.random() > 0.7) {
-        const directions = ['BUY', 'SELL'];
-        const strategies = ['AI Momentum', 'AI Scalper', 'Trend Follower', 'AMD Sniper'];
-        const direction = directions[Math.floor(Math.random() * 2)];
-        const p = pricesRef.current;
-        const newSignal = {
-          symbol: 'XAUUSD',
-          direction,
-          confidence: Math.floor(60 + Math.random() * 35),
-          entryPrice: parseFloat(p.XAUUSD.bid.toFixed(2)),
-          strategy: strategies[Math.floor(Math.random() * strategies.length)],
-          qualityScore: parseFloat((5 + Math.random() * 4.5).toFixed(1))
-        };
-        setSignals(prev => [newSignal, ...prev].slice(0, 10));
-      }
-    }, 10000);
-
-    simulationRef.current = { signalInterval };
+    simulationRef.current = {};
     setConnected(true);
   }, []);
 
   const stopSimulation = useCallback(() => {
-    if (simulationRef.current) {
-      if (simulationRef.current.signalInterval) {
-        clearInterval(simulationRef.current.signalInterval);
-      }
-      simulationRef.current = null;
-    }
+    simulationRef.current = null;
   }, []);
 
   const connect = useCallback(() => {

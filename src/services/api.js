@@ -239,11 +239,36 @@ export const api = {
 
   // —— Signals ——
   getSignals: async () => {
-    const result = await protectedFetch(`${API_BASE}/signals`);
-    if (Array.isArray(result)) return result;
-    return [
-      { _id: 's1', symbol: 'XAUUSD', direction: 'BUY', entryPrice: 2365.5, stopLoss: 2355, takeProfit: 2380, confidence: 85, qualityScore: 8.5, strategy: 'AI Momentum', marketBias: 'bullish', session: 'london', status: 'active' },
-    ];
+    const engineActive = await protectedFetch(`${API_BASE}/engine/signals/active`, {}, null);
+    const engineList = Array.isArray(engineActive?.signals)
+      ? engineActive.signals.map((s) => ({
+          ...s,
+          direction: s.direction || s.type,
+          entryPrice: s.entry ?? s.entryPrice,
+          stopLoss: s.sl ?? s.stopLoss,
+          takeProfit: s.tp ?? s.takeProfit,
+          status: s.status || 'active',
+          priceSource: s.price_source || s.priceSource || 'mt5_live',
+        }))
+      : [];
+
+    const result = await protectedFetch(`${API_BASE}/signals`, {}, []);
+    const dbList = Array.isArray(result) ? result : [];
+    if (engineList.length) {
+      const merged = [...engineList];
+      const seen = new Set(engineList.map((s) => `${s.symbol}-${s.direction}-${s.entryPrice}`));
+      for (const row of dbList) {
+        const key = `${row.symbol}-${row.direction}-${row.entryPrice}`;
+        if (!seen.has(key)) merged.push(row);
+      }
+      return merged;
+    }
+    return dbList;
+  },
+
+  getEngineActiveSignals: async () => {
+    const data = await protectedFetch(`${API_BASE}/engine/signals/active`, {}, { signals: [] });
+    return data?.signals || [];
   },
 
   getSignalHistory: async () => {

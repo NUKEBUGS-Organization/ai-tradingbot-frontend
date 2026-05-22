@@ -354,7 +354,13 @@ export default function EnginePanel() {
                       <div style={{ background: '#161b22', borderRadius: 8, padding: 16, border: '1px solid #21262d' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>Direction:</span> <strong style={{ color: analysis.signal.type === 'BUY' ? '#3fb950' : '#f85149' }}>{analysis.signal.type}</strong></div>
-                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Entry:</span> <strong>{analysis.signal.entry}</strong></div>
+                          <div>
+                            <span style={{ color: '#545d68', fontSize: 11 }}>Entry:</span>{' '}
+                            <strong>{analysis.signal.entry}</strong>
+                            {analysis.signal.price_source === 'mt5_live' && (
+                              <span className="badge badge-gold" style={{ marginLeft: 6, fontSize: 9 }}>MT5 LIVE</span>
+                            )}
+                          </div>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>SL:</span> <strong style={{ color: '#f85149' }}>{analysis.signal.sl}</strong></div>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>TP:</span> <strong style={{ color: '#3fb950' }}>{analysis.signal.tp}</strong></div>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>Lot Size:</span> <strong>{analysis.signal.lot_size}</strong></div>
@@ -538,7 +544,12 @@ export default function EnginePanel() {
                       <tr key={sig._id || i}>
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{sig.symbol}</td>
                         <td><span className={`badge ${sig.direction === 'BUY' ? 'badge-green' : 'badge-red'}`}>{sig.direction}</span></td>
-                        <td>{sig.entryPrice ?? sig.entry ?? '-'}</td>
+                        <td>
+                          {sig.entryPrice ?? sig.entry ?? '-'}
+                          {(sig.priceSource === 'mt5_live' || sig.price_source === 'mt5_live') && (
+                            <span className="badge badge-gold" style={{ marginLeft: 6, fontSize: 9 }}>LIVE</span>
+                          )}
+                        </td>
                         <td style={{ color: '#f85149' }}>{sig.stopLoss ?? sig.sl ?? '-'}</td>
                         <td style={{ color: '#3fb950' }}>{sig.takeProfit ?? sig.tp ?? '-'}</td>
                         <td><span className={`badge ${sig.confidence >= 80 ? 'badge-green' : sig.confidence >= 60 ? 'badge-gold' : 'badge-red'}`}>{sig.confidence}%</span></td>
