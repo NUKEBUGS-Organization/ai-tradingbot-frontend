@@ -112,6 +112,10 @@ export default function EnginePanel() {
         );
         return;
       }
+      if (result.reason === 'market_closed') {
+        alert(result.message);
+        return;
+      }
       if (result.sent && result.ea_message) {
         alert(`MT5 did not open order: ${result.ea_message}\n(${result.status || result.reason || 'rejected'})`);
         return;
