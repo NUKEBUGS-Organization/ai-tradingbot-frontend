@@ -102,11 +102,21 @@ export default function EnginePanel() {
     setTestFiring(true);
     try {
       const result = await api.testFireTrade(testFireSymbol, testFireDirection);
-      alert(
-        result?.sent
-          ? `Test ${testFireDirection} sent for ${testFireSymbol}. Check MT5 Experts tab for ticket or rejection reason.`
-          : `Not sent: ${result?.reason || result?.message || 'unknown error'}`
-      );
+      if (!result) {
+        alert('Test trade failed: no response from server. Is the Python engine running?');
+        return;
+      }
+      if (result.executed && result.ticket) {
+        alert(
+          `Executed on MT5: ${testFireDirection} ${result.broker_symbol || testFireSymbol}\nTicket #${result.ticket}`
+        );
+        return;
+      }
+      if (result.sent && result.ea_message) {
+        alert(`MT5 did not open order: ${result.ea_message}\n(${result.status || result.reason || 'rejected'})`);
+        return;
+      }
+      alert(result.message || `Not sent: ${result?.reason || 'unknown error'}`);
     } finally {
       setTestFiring(false);
     }
@@ -202,8 +212,9 @@ export default function EnginePanel() {
               <strong style={{ color: '#e6edf3' }}>Auto-Execute</strong> (OFF by default): when enabled, high-confidence
               AI signals are sent to the EA. Leave OFF in production to avoid unintended trades.
               <span style={{ display: 'block', marginTop: 8 }}>
-                Use <strong style={{ color: '#d4af37' }}>Fire …</strong> above to verify Python → EA → MT5 for your client.
-                Requires EA with <strong style={{ color: '#d4af37' }}>Auto Execute Signals</strong> enabled and bridge{' '}
+                Use <strong style={{ color: '#d4af37' }}>Fire …</strong> above to verify Python → EA → MT5. Test Fire works even if
+                EA <strong style={{ color: '#d4af37' }}>Auto Execute Signals</strong> is OFF (recompile EA after update). Enable{' '}
+                <strong style={{ color: '#d4af37' }}>Algo Trading</strong> in the MT5 toolbar. Bridge{' '}
                 {autoTrade.mt5_connected || engineStatus?.mt5_bridge?.connected ? (
                   <span style={{ color: '#3fb950' }}>connected</span>
                 ) : (
