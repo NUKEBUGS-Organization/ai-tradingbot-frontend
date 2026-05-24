@@ -113,7 +113,13 @@ export default function EnginePanel() {
         return;
       }
       if (result.reason === 'market_closed') {
-        alert(result.message);
+        if (result.demo && result.telegram_sent) {
+          alert(
+            `Market closed — demo ${testFireDirection} ${testFireSymbol} posted to Telegram.\n(No real MT5 order.)`
+          );
+        } else {
+          alert(result.message || 'Market closed. Demo trade could not be sent to Telegram.');
+        }
         return;
       }
       if (result.sent && result.ea_message) {
