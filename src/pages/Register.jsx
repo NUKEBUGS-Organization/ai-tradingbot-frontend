@@ -71,7 +71,7 @@ export default function Register() {
         <div className="login-header">
           <BrandLogo size={56} className="login-logo-img" />
           <h1 className="login-title">Create Account</h1>
-          <p className="login-subtitle">Join AurumX Trading Platform</p>
+          <p className="login-subtitle">Join VCL4X Trading Platform</p>
         </div>
         {error && <div className="login-error">{error}</div>}
         <form className="login-form" onSubmit={handleSubmit}>

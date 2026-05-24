@@ -31,6 +31,11 @@ export const LANDING_URL = trimTrailingSlash(
   import.meta.env.VITE_LANDING_URL || 'http://localhost:3001'
 );
 
+/** VCL4X Alpha Access Telegram channel */
+export const TELEGRAM_URL = trimTrailingSlash(
+  import.meta.env.VITE_TELEGRAM_URL || 'https://t.me/VCL4XAlphaAccess'
+);
+
 export const ALLOW_MOCK_AUTH =
   import.meta.env.VITE_ALLOW_MOCK_AUTH === 'true' ||
   import.meta.env.DEV;

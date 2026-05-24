@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { Send, ShieldCheck, Radio, Check, AlertTriangle, Zap, Shield, TrendingUp, Users, MessageSquare, RefreshCw } from 'lucide-react';
 import api from '../services/api';
+import { TELEGRAM_URL } from '../config/env';
 
 export default function TelegramPanel() {
   const [engineStatus, setEngineStatus] = useState(null);
@@ -62,6 +63,16 @@ export default function TelegramPanel() {
       <main className="main-content">
         <Header title="Telegram System (Admin)" />
         <div className="page-content">
+
+          <div style={{ marginBottom: 20, padding: '14px 16px', borderRadius: 8, border: '1px solid rgba(212,175,55,0.2)', background: 'rgba(212,175,55,0.06)' }}>
+            <div style={{ fontSize: 13, color: '#e6edf3', marginBottom: 6 }}>Public channel</div>
+            <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" style={{ color: '#d4af37', fontWeight: 600 }}>
+              {TELEGRAM_URL.replace('https://', '')}
+            </a>
+            <div style={{ fontSize: 11, color: '#8b949e', marginTop: 6 }}>
+              Signals and trade alerts are posted here when the bot is configured as a channel admin.
+            </div>
+          </div>
 
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: 24 }}>
             <div className="stat-card">

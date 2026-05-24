@@ -69,7 +69,7 @@ const mockUser = {
   email: 'demo@aurumx.com',
   role: 'user',
   isActive: true,
-  mt5Account: { accountId: 'MT5-500042', server: 'AurumX-Live', connected: true, balance: 52430.8, equity: 53210.45, margin: 2100, freeMargin: 51110.45 },
+  mt5Account: { accountId: 'MT5-500042', server: 'VCL4X-Live', connected: true, balance: 52430.8, equity: 53210.45, margin: 2100, freeMargin: 51110.45 },
   telegram: { chatId: '987654321', connected: true, notifications: true },
   riskSettings: { maxDailyDrawdown: 5, maxRiskPerTrade: 2, maxOpenPositions: 5, dynamicLotSizing: true, spreadProtection: true, newsFilter: true },
   stats: { totalTrades: 312, winRate: 68.2, profitFactor: 1.87, dailyPnl: 580.25, maxDrawdown: 6.1 },

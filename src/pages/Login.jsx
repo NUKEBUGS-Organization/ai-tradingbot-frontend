@@ -50,7 +50,7 @@ export default function Login() {
         <div className="login-header">
           <BrandLogo size={56} className="login-logo-img" />
           <h1 className="login-title">Welcome Back</h1>
-          <p className="login-subtitle">Sign in to AurumX Trading Platform</p>
+          <p className="login-subtitle">Sign in to VCL4X Trading Platform</p>
         </div>
 
         {error && <div className="login-error">{error}</div>}
