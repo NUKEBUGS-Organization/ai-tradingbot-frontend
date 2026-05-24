@@ -10,6 +10,10 @@ export default function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [broadcastTarget, setBroadcastTarget] = useState('all');
+  const [broadcastSymbol, setBroadcastSymbol] = useState('XAUUSD');
+  const [minConfidence, setMinConfidence] = useState(75);
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState(null);
   const [tab, setTab] = useState('overview');
 
   useEffect(() => { loadData(); }, []);
@@ -33,6 +37,19 @@ export default function AdminPanel() {
       setBroadcastMsg('');
       alert('Broadcast sent successfully!');
     } catch (err) { console.error(err); }
+  };
+
+  const handleBroadcast = async (isTest = false) => {
+    setBroadcasting(true);
+    setBroadcastResult(null);
+    try {
+      const result = await api.adminBroadcastSignal(broadcastSymbol, minConfidence, isTest);
+      setBroadcastResult(result);
+    } catch (err) {
+      setBroadcastResult({ success: false, reason: err.message });
+    } finally {
+      setBroadcasting(false);
+    }
   };
 
   const planData = data ? [
@@ -164,6 +181,102 @@ export default function AdminPanel() {
           )}
 
           {tab === 'broadcast' && (
+            <>
+            <div className="card" style={{ marginBottom: 24 }}>
+              <div className="card-header">
+                <span className="card-title">📡 Signal Broadcasting</span>
+                <span className="badge badge-gold">Admin Only</span>
+              </div>
+              <div className="card-body">
+                <p style={{ fontSize: 13, color: '#8b949e', marginBottom: 16 }}>
+                  Manually trigger AI analysis and broadcast high-confidence signals to Telegram.
+                  Only signals meeting the minimum confidence threshold will be sent.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: '#8b949e', display: 'block', marginBottom: 6 }}>Symbol</label>
+                    <select
+                      value={broadcastSymbol}
+                      onChange={e => setBroadcastSymbol(e.target.value)}
+                      style={{ width: '100%', background: '#0d1117', border: '1px solid #30363d', borderRadius: 6, padding: '8px 12px', color: '#e6edf3', fontSize: 13 }}
+                    >
+                      <option value="XAUUSD">XAUUSD (Gold)</option>
+                      <option value="EURUSD">EURUSD</option>
+                      <option value="GBPUSD">GBPUSD</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: '#8b949e', display: 'block', marginBottom: 6 }}>
+                      Min Confidence: {minConfidence}%
+                    </label>
+                    <input
+                      type="range"
+                      min="65"
+                      max="95"
+                      value={minConfidence}
+                      onChange={e => setMinConfidence(Number(e.target.value))}
+                      style={{ width: '100%', accentColor: '#d4af37' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#545d68' }}>
+                      <span>65% (Min)</span>
+                      <span>95% (Max)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                  <button
+                    onClick={() => handleBroadcast(false)}
+                    disabled={broadcasting}
+                    className="btn btn-primary"
+                    style={{ flex: 1 }}
+                  >
+                    {broadcasting ? 'Analyzing...' : '📡 Analyze & Broadcast'}
+                  </button>
+                  <button
+                    onClick={() => handleBroadcast(true)}
+                    disabled={broadcasting}
+                    className="btn btn-secondary"
+                    style={{ flex: 1 }}
+                  >
+                    {broadcasting ? 'Sending...' : '🧪 Send Test Signal'}
+                  </button>
+                </div>
+
+                {broadcastResult && (
+                  <div style={{
+                    padding: 12,
+                    borderRadius: 8,
+                    background: broadcastResult.success ? 'rgba(63,185,80,0.1)' : 'rgba(248,81,73,0.1)',
+                    border: `1px solid ${broadcastResult.success ? '#3fb950' : '#f85149'}`,
+                    fontSize: 13
+                  }}>
+                    {broadcastResult.success ? (
+                      <div>
+                        <div style={{ color: '#3fb950', fontWeight: 700, marginBottom: 4 }}>
+                          ✅ {broadcastResult.test ? 'Test signal sent!' : 'Signal broadcast successfully!'}
+                        </div>
+                        {broadcastResult.signal && (
+                          <div style={{ color: '#8b949e' }}>
+                            {broadcastResult.signal.direction} {broadcastResult.signal.symbol} —
+                            Confidence: {broadcastResult.signal.confidence}% ({broadcastResult.signal.grade}) —
+                            Sent to: {broadcastResult.sent_to} recipients
+                          </div>
+                        )}
+                        {broadcastResult.test && (
+                          <div style={{ color: '#8b949e' }}>Sent to {broadcastResult.sent_to} recipients</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ color: '#f85149' }}>
+                        ❌ {broadcastResult.reason || 'Broadcast failed'}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="card" style={{ maxWidth: 600 }}>
               <div className="card-header"><span className="card-title"><Send size={16} /> Broadcast Message</span></div>
               <div className="card-body">
@@ -184,6 +297,7 @@ export default function AdminPanel() {
                 <button className="btn btn-primary" onClick={sendBroadcast}><Send size={14} /> Send Broadcast</button>
               </div>
             </div>
+            </>
           )}
 
           {tab === 'health' && (

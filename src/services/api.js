@@ -431,6 +431,17 @@ export const api = {
     });
   },
 
+  adminBroadcastSignal: async (symbol, minConfidence, isTest) => {
+    return protectedFetch(`${API_BASE}/engine/admin/broadcast-signal`, {
+      method: 'POST',
+      body: JSON.stringify({
+        symbol,
+        min_confidence: minConfidence,
+        is_test: isTest
+      })
+    });
+  },
+
   // —— Subscriptions ——
   getPlans: async () => {
     return protectedFetch(`${API_BASE}/subscriptions/plans`, {}, []);
