@@ -239,31 +239,9 @@ export const api = {
 
   // —— Signals ——
   getSignals: async () => {
-    const engineActive = await protectedFetch(`${API_BASE}/engine/signals/active`, {}, null);
-    const engineList = Array.isArray(engineActive?.signals)
-      ? engineActive.signals.map((s) => ({
-          ...s,
-          direction: s.direction || s.type,
-          entryPrice: s.entry ?? s.entryPrice,
-          stopLoss: s.sl ?? s.stopLoss,
-          takeProfit: s.tp ?? s.takeProfit,
-          status: s.status || 'active',
-          priceSource: s.price_source || s.priceSource || 'mt5_live',
-        }))
-      : [];
-
-    const result = await protectedFetch(`${API_BASE}/signals`, {}, []);
-    const dbList = Array.isArray(result) ? result : [];
-    if (engineList.length) {
-      const merged = [...engineList];
-      const seen = new Set(engineList.map((s) => `${s.symbol}-${s.direction}-${s.entryPrice}`));
-      for (const row of dbList) {
-        const key = `${row.symbol}-${row.direction}-${row.entryPrice}`;
-        if (!seen.has(key)) merged.push(row);
-      }
-      return merged;
-    }
-    return dbList;
+    const result = await protectedFetch(`${API_BASE}/signals`);
+    if (Array.isArray(result)) return result;
+    return [];
   },
 
   getEngineActiveSignals: async () => {
@@ -276,10 +254,8 @@ export const api = {
     return Array.isArray(result) ? result : [];
   },
 
-  /** Derived from GET /api/signals (no /signals/market-analysis route) */
   getMarketAnalysis: async () => {
-    const signals = await api.getSignals();
-    return buildMarketAnalysisFromSignals(signals);
+    return protectedFetch(`${API_BASE}/signals/market-analysis`);
   },
 
   // —— Engine ——

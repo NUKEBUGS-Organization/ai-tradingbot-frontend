@@ -5,7 +5,7 @@ import ForexChartDashboard from '../components/tradingview/ForexChartDashboard';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
-import { pickMt5LiveAccount } from '../utils/tradeMetrics';
+import { pickMt5LiveAccount, isSimulatedWsAccount } from '../utils/tradeMetrics';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, TrendingUp, TrendingDown, Activity, Target, BarChart3, Wifi, WifiOff, Zap, Shield, MessageCircle } from 'lucide-react';
 
@@ -45,10 +45,22 @@ export default function Dashboard() {
     } catch (err) { console.error(err); }
   };
 
-  const live = pickMt5LiveAccount(null, account) || mt5Live;
-  const bal = live?.balance ?? user?.mt5Account?.balance ?? 0;
-  const eq = live?.equity ?? user?.mt5Account?.equity ?? 0;
-  const dailyPnl = live?.dailyPnl ?? user?.stats?.dailyPnl ?? 0;
+  const engineBalance = mt5Live?.balance != null && Number(mt5Live.balance) > 0 ? Number(mt5Live.balance) : null;
+  const engineEquity = mt5Live?.equity != null && Number(mt5Live.equity) > 0 ? Number(mt5Live.equity) : null;
+  const engineDailyPnl = mt5Live?.dailyPnl != null ? Number(mt5Live.dailyPnl) : null;
+
+  const wsAccount = !isSimulatedWsAccount(account) && account?.source === 'mt5' ? account : null;
+  const wsBalance = wsAccount?.balance != null && Number(wsAccount.balance) > 0 ? Number(wsAccount.balance) : null;
+  const wsEquity = wsAccount?.equity != null && Number(wsAccount.equity) > 0 ? Number(wsAccount.equity) : null;
+  const wsDailyPnl = wsAccount?.dailyPnl != null ? Number(wsAccount.dailyPnl) : null;
+
+  const authMt5 = user?.mt5Account?.connected ? user.mt5Account : null;
+  const authBalance = authMt5?.balance != null && Number(authMt5.balance) > 0 ? Number(authMt5.balance) : null;
+  const authEquity = authMt5?.equity != null && Number(authMt5.equity) > 0 ? Number(authMt5.equity) : null;
+
+  const bal = engineBalance ?? wsBalance ?? authBalance ?? 0;
+  const eq = engineEquity ?? wsEquity ?? authEquity ?? 0;
+  const dailyPnl = engineDailyPnl ?? wsDailyPnl ?? user?.stats?.dailyPnl ?? 0;
 
   const periodMs = { '1D': 86400000, '1W': 7 * 86400000, '1M': 30 * 86400000 };
   const filteredCurve = equityPeriod === 'ALL'

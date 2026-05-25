@@ -61,7 +61,10 @@ export default function AISignals() {
               </div>
               <div className="stat-card">
                 <div className="stat-card-header"><span className="stat-card-label">Success Rate</span><div className="stat-card-icon green"><Eye size={16} /></div></div>
-                <div className="stat-card-value positive">{analysis.successRate}%</div>
+                <div className="stat-card-value positive">
+                  {analysis?.successRate ?? 'N/A'}
+                  {typeof analysis?.successRate === 'number' ? '%' : ''}
+                </div>
               </div>
             </div>
           )}

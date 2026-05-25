@@ -102,7 +102,7 @@ function normalizeLiveAccount(acc) {
 
 const MOCK_DEMO_BALANCE = 52430.8;
 
-function isSimulatedWsAccount(wsAccount) {
+export function isSimulatedWsAccount(wsAccount) {
   if (!wsAccount) return true;
   if (wsAccount.source === 'simulation') return true;
   if (wsAccount.source !== 'mt5') {
