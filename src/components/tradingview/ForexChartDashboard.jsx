@@ -6,6 +6,8 @@ export const FOREX_PAIRS = [
   { id: 'XAUUSD', label: 'XAUUSD', title: 'Gold', symbol: 'OANDA:XAUUSD' },
   { id: 'EURUSD', label: 'EURUSD', title: 'Euro / US Dollar', symbol: 'FX:EURUSD' },
   { id: 'GBPUSD', label: 'GBPUSD', title: 'British Pound / US Dollar', symbol: 'FX:GBPUSD' },
+  { id: 'USDJPY', label: 'USDJPY', title: 'US Dollar / Japanese Yen', symbol: 'FX:USDJPY' },
+  { id: 'XTIUSD', label: 'XTIUSD', title: 'Crude Oil (WTI)', symbol: 'TVC:USOIL' },
 ];
 
 const INTERVALS = [

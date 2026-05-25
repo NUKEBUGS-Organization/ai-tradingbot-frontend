@@ -7,6 +7,8 @@ const TICKERS = [
   { key: 'XAUUSD', label: 'XAU', decimals: 2 },
   { key: 'EURUSD', label: 'EUR', decimals: 5 },
   { key: 'GBPUSD', label: 'GBP', decimals: 5 },
+  { key: 'USDJPY', label: 'JPY', decimals: 3 },
+  { key: 'XTIUSD', label: 'OIL', decimals: 2 },
 ];
 
 export default function Header({ title }) {

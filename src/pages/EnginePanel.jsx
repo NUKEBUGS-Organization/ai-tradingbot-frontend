@@ -7,7 +7,7 @@ import { normalizeSignalsList, pickMt5LiveAccount, mapRiskSettingsForUi } from '
 import { useWebSocket } from '../services/websocket';
 import { Cpu, Activity, Wifi, WifiOff, Zap, Shield, RefreshCw, AlertTriangle, Play, BarChart3 } from 'lucide-react';
 
-const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD'];
+const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'XTIUSD'];
 
 export default function EnginePanel() {
   const { user } = useAuth();
@@ -323,9 +323,11 @@ export default function EnginePanel() {
                     onChange={(e) => setSelectedSymbol(e.target.value)}
                     style={{ background: '#161b22', border: '1px solid #21262d', color: '#e6edf3', padding: '4px 8px', borderRadius: 6, fontSize: 12 }}
                   >
-                    {ANALYZE_SYMBOLS.map((sym) => (
-                      <option key={sym} value={sym}>{sym}</option>
-                    ))}
+                    <option value="XAUUSD">XAUUSD (Gold)</option>
+                    <option value="EURUSD">EURUSD</option>
+                    <option value="GBPUSD">GBPUSD</option>
+                    <option value="USDJPY">USDJPY</option>
+                    <option value="XTIUSD">XTIUSD (Oil)</option>
                   </select>
                   <button
                     type="button"
