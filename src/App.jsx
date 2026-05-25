@@ -11,6 +11,7 @@ import TelegramPanel from './pages/TelegramPanel';
 import Subscriptions from './pages/Subscriptions';
 import EnginePanel from './pages/EnginePanel';
 import SignalHistory from './pages/SignalHistory';
+import SubscriptionGate from './components/SubscriptionGate';
 
 function LoadingScreen() {
   return (
@@ -74,14 +75,14 @@ function App() {
               </GuestRoute>
             }
           />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><SubscriptionGate title="Dashboard"><Dashboard /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
-          <Route path="/risk" element={<ProtectedRoute><RiskManagement /></ProtectedRoute>} />
-          <Route path="/signals" element={<ProtectedRoute><AISignals /></ProtectedRoute>} />
-          <Route path="/signals/history" element={<ProtectedRoute><SignalHistory /></ProtectedRoute>} />
+          <Route path="/risk" element={<ProtectedRoute><SubscriptionGate title="Risk Management"><RiskManagement /></SubscriptionGate></ProtectedRoute>} />
+          <Route path="/signals" element={<ProtectedRoute><SubscriptionGate title="AI Signals"><AISignals /></SubscriptionGate></ProtectedRoute>} />
+          <Route path="/signals/history" element={<ProtectedRoute><SubscriptionGate title="Signal History"><SignalHistory /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/telegram" element={<ProtectedRoute adminOnly><TelegramPanel /></ProtectedRoute>} />
           <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />
-          <Route path="/engine" element={<ProtectedRoute><EnginePanel /></ProtectedRoute>} />
+          <Route path="/engine" element={<ProtectedRoute><SubscriptionGate title="AI Engine"><EnginePanel /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/" element={<HomeRedirect />} />
         </Routes>
       </Router>

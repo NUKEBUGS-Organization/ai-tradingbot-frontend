@@ -60,7 +60,7 @@ export default function Sidebar() {
           <div className="sidebar-avatar">{user?.name?.charAt(0) || 'U'}</div>
           <div className="sidebar-user-info">
             <div className="sidebar-user-name">{user?.name || 'User'}</div>
-            <div className="sidebar-user-role">{user?.role || 'user'}</div>
+            <div className="sidebar-user-role">{user?.subscription?.plan || user?.role || 'user'}</div>
           </div>
           <button onClick={handleLogout} className="top-bar-btn" title="Logout" style={{ marginLeft: 'auto', width: 28, height: 28 }}>
             <LogOut size={14} />

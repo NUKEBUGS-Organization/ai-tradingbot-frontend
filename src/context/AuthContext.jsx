@@ -23,6 +23,7 @@ const mockUser = {
   email: 'demo@aurumx.com',
   role: 'user',
   isActive: true,
+  subscription: { plan: 'free', status: 'active', expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() },
   mt5Account: { accountId: 'MT5-100200', connected: true, balance: 10000.0 },
   riskSettings: { maxDailyDrawdown: 5, maxRiskPerTrade: 2, maxOpenPositions: 5 },
 };
