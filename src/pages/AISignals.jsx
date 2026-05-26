@@ -124,7 +124,7 @@ export default function AISignals() {
 
           {/* Signal History */}
           <div className="card">
-            <div className="card-header"><span className="card-title"><Brain size={16} /> Active Signals</span><span className="badge badge-blue">{signals.length}</span></div>
+            <div className="card-header"><span className="card-title"><Brain size={16} /> Live Engine Signals</span><span className="badge badge-blue">{signals.length}</span></div>
             <div className="card-body" style={{ padding: 0 }}>
               <div className="table-container">
                 <table>
@@ -135,6 +135,14 @@ export default function AISignals() {
                     </tr>
                   </thead>
                   <tbody>
+                    {signals.length === 0 && (
+                      <tr>
+                        <td colSpan={11} style={{ textAlign: 'center', padding: 48, color: '#545d68' }}>
+                          No live engine signals yet. They appear when the bot publishes to Telegram
+                          (XAUUSD, EURUSD, GBPUSD, USDJPY) with strategy &quot;AMD AI Engine&quot;.
+                        </td>
+                      </tr>
+                    )}
                     {signals.map(s => (
                       <tr
                         key={s._id}

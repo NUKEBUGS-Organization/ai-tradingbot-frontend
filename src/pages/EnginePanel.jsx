@@ -540,7 +540,7 @@ export default function EnginePanel() {
 
           <div className="card" style={{ marginTop: 20 }}>
             <div className="card-header">
-              <span className="card-title"><Activity size={16} /> Active Signals</span>
+              <span className="card-title"><Activity size={16} /> Live Engine Signals</span>
               <button onClick={loadData} style={{ background: '#21262d', border: '1px solid #30363d', color: '#e6edf3', padding: '4px 12px', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
                 <RefreshCw size={12} /> Refresh
               </button>
@@ -571,7 +571,11 @@ export default function EnginePanel() {
                       </tr>
                     ))}
                     {(!signals.history || signals.history.length === 0) && (
-                      <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: '#545d68' }}>{loading ? 'Loading signals...' : 'No signals yet.'}</td></tr>
+                      <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: '#545d68' }}>
+                        {loading
+                          ? 'Loading signals...'
+                          : 'No live engine signals yet. Signals appear here when the AI engine publishes to Telegram (XAUUSD, EURUSD, GBPUSD, USDJPY).'}
+                      </td></tr>
                     )}
                   </tbody>
                 </table>
