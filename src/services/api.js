@@ -6,7 +6,8 @@
 import { API_BASE, ENGINE_BASE, ALLOW_MOCK_AUTH } from '../config/env';
 import { pickMt5LiveAccount, mapRiskSettingsForUi } from '../utils/tradeMetrics';
 
-const getToken = () => localStorage.getItem('aurumx_token');
+const getToken = () =>
+  localStorage.getItem('aurumx_token') || sessionStorage.getItem('aurumx_token');
 
 const authFetch = async (url, options = {}) => {
   const token = getToken();
@@ -20,6 +21,8 @@ const authFetch = async (url, options = {}) => {
     if (res.status === 401) {
       localStorage.removeItem('aurumx_token');
       localStorage.removeItem('aurumx_user');
+      sessionStorage.removeItem('aurumx_token');
+      sessionStorage.removeItem('aurumx_user');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
@@ -265,10 +268,17 @@ export const api = {
 
   // —— Engine ——
   getEngineStatus: async () => {
-    return protectedFetch(
-      `${API_BASE}/engine/status`,
-      {},
-      { connected: false, mt5_bridge: { connected: false }, telegram: { is_running: false } }
+    const result = await protectedFetch(`${API_BASE}/engine/status`, {}, null);
+    if (result?.connected || result?.engine?.is_running) return result;
+    if (result?.code === 'SUBSCRIPTION_REQUIRED') {
+      return { connected: false, mt5_bridge: { connected: false }, telegram: { is_running: false }, reason: result.message };
+    }
+    return (
+      result ?? {
+        connected: false,
+        mt5_bridge: { connected: false },
+        telegram: { is_running: false },
+      }
     );
   },
 
@@ -322,7 +332,7 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ symbol }) },
       null
     );
-    if (result?.action === 'OFFLINE' || result?.reason) return result;
+    if (result?.action === 'OFFLINE') return result;
     if (result?.symbol != null || result?.analysis) return result;
     if (result?.message?.includes('Cannot POST')) {
       return { action: 'OFFLINE', reason: 'Node server missing /api/engine/analyze — restart npm run start in server/' };

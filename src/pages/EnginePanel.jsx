@@ -251,7 +251,7 @@ export default function EnginePanel() {
                 </div>
               </div>
               <div className="stat-card-value" style={{ fontSize: 16 }}>{engineStatus?.mt5_bridge?.connected ? '🟢 Connected' : '🔴 Disconnected'}</div>
-              <div className="stat-card-change">Port {engineStatus?.mt5_bridge?.port || 5555}</div>
+              <div className="stat-card-change">Port {engineStatus?.mt5_bridge?.port || 15555}</div>
             </div>
             <div className="stat-card">
               <div className="stat-card-header">
