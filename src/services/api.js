@@ -215,16 +215,7 @@ export const api = {
     const qs = params && !params.startsWith('?') ? `?${params}` : params;
     const result = await protectedFetch(`${API_BASE}/trades${qs}`);
     if (result && Array.isArray(result.trades)) return result;
-    const isClosed = params.includes('closed');
-    return {
-      trades: isClosed
-        ? [
-            { _id: '1', ticket: 10000001, symbol: 'XAUUSD', type: 'BUY', lotSize: 0.15, openPrice: 2360.5, closePrice: 2365.5, profit: 75, status: 'closed', signal: { strategy: 'AI Momentum' } },
-          ]
-        : [
-            { _id: '4', ticket: 10000004, symbol: 'XAUUSD', type: 'BUY', lotSize: 0.25, openPrice: 2363, profit: 62.5, status: 'open', signal: { strategy: 'AI Trend' } },
-          ],
-    };
+    return { trades: [] };
   },
 
   /** Derived from GET /api/trades (no /trades/stats route) */
@@ -344,9 +335,10 @@ export const api = {
   },
 
   setRiskPreset: async (preset) => {
+    const profile = await api.getProfile();
     return protectedFetch(`${API_BASE}/engine/risk/preset`, {
       method: 'POST',
-      body: JSON.stringify({ preset }),
+      body: JSON.stringify({ preset, userId: profile?._id }),
     });
   },
   runBacktest: async ({ symbol = 'XAUUSD', initial_balance = 10000, preset = 'moderate', spread_pips = 3.0 } = {}) => {
