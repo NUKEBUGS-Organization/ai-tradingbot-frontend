@@ -19,11 +19,11 @@ const mockAdmin = {
 
 const mockUser = {
   _id: 'user123',
-  name: 'Demo User',
-  email: 'demo@aurumx.com',
+  name: 'Demo Trader',
+  email: 'demo@gmail.com',
   role: 'user',
   isActive: true,
-  subscription: { plan: 'free', status: 'active', expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() },
+  subscription: { plan: 'professional', status: 'active', expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() },
   mt5Account: { accountId: 'MT5-100200', connected: true, balance: 10000.0 },
   riskSettings: { maxDailyDrawdown: 5, maxRiskPerTrade: 2, maxOpenPositions: 5 },
 };
@@ -83,6 +83,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const fetchProfile = useCallback(async () => {
+    const activeToken = readStoredToken();
     try {
       const data = await api.getProfile();
       if (data) {
@@ -91,10 +92,18 @@ export function AuthProvider({ children }) {
         const storage = remember ? localStorage : sessionStorage;
         storage.setItem(USER_KEY, JSON.stringify(data));
       } else {
-        logout();
+        const mock = resolveMockUser(activeToken);
+        const stored = readStoredUser();
+        if (mock) setUser(mock);
+        else if (stored) setUser(stored);
+        else logout();
       }
     } catch {
-      logout();
+      const mock = resolveMockUser(activeToken);
+      const stored = readStoredUser();
+      if (mock) setUser(mock);
+      else if (stored) setUser(stored);
+      else logout();
     } finally {
       setLoading(false);
     }

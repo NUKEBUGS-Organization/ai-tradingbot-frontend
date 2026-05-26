@@ -66,7 +66,8 @@ const publicFetch = async (url, options = {}) => {
 const mockUser = {
   _id: 'user123',
   name: 'Demo Trader',
-  email: 'demo@aurumx.com',
+  email: 'demo@gmail.com',
+  subscription: { plan: 'professional', status: 'active', expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() },
   role: 'user',
   isActive: true,
   mt5Account: { accountId: 'MT5-500042', server: 'VCL4X-Live', connected: true, balance: 52430.8, equity: 53210.45, margin: 2100, freeMargin: 51110.45 },
@@ -163,10 +164,14 @@ export const api = {
       });
     } catch (err) {
       if (!ALLOW_MOCK_AUTH) throw err;
-      if (email === 'admin@aurumx.com' && password === 'AdminX@2026!#') {
+      const normalized = String(email || '').toLowerCase().trim();
+      if (normalized === 'admin@aurumx.com' && password === 'admin123') {
         return { ...mockAdmin, token: 'mock-admin-token' };
       }
-      if (email === 'demo@aurumx.com' && password === 'DemoX@2026!#') {
+      if (
+        (normalized === 'demo@gmail.com' || normalized === 'demo@aurumx.com') &&
+        password === 'demo123'
+      ) {
         return { ...mockUser, token: 'mock-user-token' };
       }
       throw err;

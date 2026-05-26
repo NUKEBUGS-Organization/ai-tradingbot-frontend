@@ -100,8 +100,8 @@ export default function Login() {
         <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(212,175,55,0.06)', borderRadius: 8, border: '1px solid rgba(212,175,55,0.15)' }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: '#d4af37', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Demo Credentials</div>
           <div style={{ fontSize: 11, color: '#8b949e', fontFamily: 'var(--font-mono)' }}>
-            Admin: admin@aurumx.com / AdminX@2026!#<br />
-            User: demo@aurumx.com / DemoX@2026!#
+            Admin: admin@aurumx.com / admin123<br />
+            Demo: demo@gmail.com / demo123
           </div>
         </div>
       </div>
