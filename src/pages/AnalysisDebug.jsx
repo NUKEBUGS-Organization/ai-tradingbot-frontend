@@ -45,7 +45,6 @@ function AnalysisRow({ analysis, index }) {
   const analysisData = analysis.analysis || {};
   const signal = analysis.signal;
 
-  const sessionPassed = !filters.session?.is_blocked && filters.session?.tradeable !== false;
   const newsPassed = !filters.news?.blocked;
   const volPassed = filters.volatility?.passed !== false;
   const riskPassed = filters.risk?.allowed !== false;
