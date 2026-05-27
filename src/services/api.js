@@ -258,6 +258,14 @@ export const api = {
   },
 
   // —— Engine ——
+  getAnalysisHistory: async () => {
+    return protectedFetch(`${API_BASE}/engine/analysis/history`);
+  },
+
+  getAnalysisLatest: async () => {
+    return protectedFetch(`${API_BASE}/engine/analysis/latest`);
+  },
+
   getEngineStatus: async () => {
     const result = await protectedFetch(`${API_BASE}/engine/status`, {}, null);
     if (result?.connected || result?.engine?.is_running) return result;

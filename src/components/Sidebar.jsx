@@ -17,6 +17,7 @@ export default function Sidebar() {
     { to: '/signals/history', icon: <History />, label: 'Signal History', section: 'main' },
     { to: '/risk', icon: <Shield />, label: 'Risk Management', section: 'main' },
     { to: '/subscriptions', icon: <CreditCard />, label: 'Subscriptions', section: 'tools' },
+    { to: '/analysis', icon: <Activity size={16} />, label: 'Analysis Log', section: 'tools' },
   ];
 
   if (user?.role === 'admin') {

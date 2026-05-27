@@ -11,6 +11,7 @@ import TelegramPanel from './pages/TelegramPanel';
 import Subscriptions from './pages/Subscriptions';
 import EnginePanel from './pages/EnginePanel';
 import SignalHistory from './pages/SignalHistory';
+import AnalysisDebug from './pages/AnalysisDebug';
 import SubscriptionGate from './components/SubscriptionGate';
 
 function LoadingScreen() {
@@ -83,6 +84,7 @@ function App() {
           <Route path="/telegram" element={<ProtectedRoute adminOnly><TelegramPanel /></ProtectedRoute>} />
           <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />
           <Route path="/engine" element={<ProtectedRoute><SubscriptionGate title="AI Engine"><EnginePanel /></SubscriptionGate></ProtectedRoute>} />
+          <Route path="/analysis" element={<ProtectedRoute><AnalysisDebug /></ProtectedRoute>} />
           <Route path="/" element={<HomeRedirect />} />
         </Routes>
       </Router>
