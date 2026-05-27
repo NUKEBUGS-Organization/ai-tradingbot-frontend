@@ -45,7 +45,7 @@ function AnalysisRow({ analysis, index }) {
   const analysisData = analysis.analysis || {};
   const signal = analysis.signal;
 
-  const sessionPassed = filters.session?.tradeable !== false;
+  const sessionPassed = !filters.session?.is_blocked && filters.session?.tradeable !== false;
   const newsPassed = !filters.news?.blocked;
   const volPassed = filters.volatility?.passed !== false;
   const riskPassed = filters.risk?.allowed !== false;
@@ -90,7 +90,7 @@ function AnalysisRow({ analysis, index }) {
         </td>
         <td style={{ padding: '10px 12px' }}>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            <FilterBadge label="Session" passed={sessionPassed} value={filters.session?.session} />
+            <FilterBadge label="Session" passed={!filters.session?.is_blocked && filters.session?.tradeable !== false} value={filters.session?.session} />
             <FilterBadge label="News" passed={newsPassed} />
             <FilterBadge label="Volatility" passed={volPassed} />
             <FilterBadge label="Risk" passed={riskPassed} />
@@ -139,8 +139,8 @@ function AnalysisRow({ analysis, index }) {
               {filters.session && (
                 <div style={{ background: '#161b22', borderRadius: 8, padding: 12, border: '1px solid var(--border-subtle)' }}>
                   <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 8 }}>SESSION FILTER</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: filters.session.tradeable ? '#3fb950' : '#f85149' }}>
-                    {filters.session.tradeable ? '✅ PASS' : '❌ BLOCKED'}
+                  <div style={{ fontSize: 13, fontWeight: 600, color: !filters.session?.is_blocked ? '#3fb950' : '#f85149' }}>
+                    {!filters.session?.is_blocked ? '✅ PASS' : '❌ BLOCKED'}
                   </div>
                   <div style={{ fontSize: 11, color: '#545d68', marginTop: 4 }}>
                     {filters.session.session?.toUpperCase() || 'UNKNOWN'}
