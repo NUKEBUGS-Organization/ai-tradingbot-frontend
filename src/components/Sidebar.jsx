@@ -1,12 +1,14 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSidebar } from '../context/SidebarContext';
 import { LayoutDashboard, Shield, Brain, MessageCircle, CreditCard, Activity, Users, LogOut, BarChart3, Cpu, History } from 'lucide-react';
 import BrandLogo from './BrandLogo';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { open, close } = useSidebar();
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -29,7 +31,9 @@ export default function Sidebar() {
   const toolItems = navItems.filter(i => i.section === 'tools');
 
   return (
-    <aside className="sidebar">
+    <>
+      {open && <div className="sidebar-overlay" onClick={close} aria-hidden="true" />}
+      <aside className={`sidebar${open ? ' open' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <BrandLogo size={36} className="sidebar-logo-img" />
@@ -40,7 +44,7 @@ export default function Sidebar() {
         <div className="nav-section">
           <div className="nav-section-title">Overview</div>
           {mainItems.map(item => (
-            <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <NavLink key={item.to} to={item.to} onClick={close} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               {item.icon}
               {item.label}
             </NavLink>
@@ -49,7 +53,7 @@ export default function Sidebar() {
         <div className="nav-section">
           <div className="nav-section-title">Tools</div>
           {toolItems.map(item => (
-            <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <NavLink key={item.to} to={item.to} onClick={close} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               {item.icon}
               {item.label}
             </NavLink>
@@ -69,5 +73,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
 import { useWebSocket } from '../services/websocket';
 import { useMt5Prices, hasLiveMt5Tickers } from '../hooks/useMt5Prices';
-import { Bell, Settings } from 'lucide-react';
+import { useSidebar } from '../context/SidebarContext';
+import { Bell, Settings, Menu } from 'lucide-react';
 
 const TICKERS = [
   { key: 'XAUUSD', label: 'XAU', decimals: 2 },
@@ -16,10 +17,19 @@ export default function Header({ title }) {
   const prices = useMt5Prices(wsPrices, priceSource);
   const prevBids = useRef({});
   const isMt5 = priceSource === 'mt5' && hasLiveMt5Tickers(prices);
+  const { toggle } = useSidebar();
 
   return (
     <header className="top-bar">
       <div className="top-bar-left">
+        <button
+          type="button"
+          className="top-bar-btn mobile-menu-btn"
+          onClick={toggle}
+          aria-label="Open navigation menu"
+        >
+          <Menu size={16} />
+        </button>
         <h1 className="page-title">{title}</h1>
         <div className="live-indicator">
           <span
