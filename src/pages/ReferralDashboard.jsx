@@ -58,7 +58,7 @@ export default function ReferralDashboard() {
               { label: 'Total Earned', value: `$${(referralData?.stats?.totalEarned ?? 0).toFixed(2)}`, icon: <DollarSign size={16} />, color: 'green' },
               { label: 'Pending Commission', value: `$${(referralData?.stats?.pendingCommission ?? 0).toFixed(2)}`, icon: <Clock size={16} />, color: 'purple' },
               { label: 'Commission Paid', value: `$${(referralData?.stats?.paidCommission ?? 0).toFixed(2)}`, icon: <Gift size={16} />, color: 'green' },
-              { label: 'Commission Rate', value: `${referralData?.commissionRate ?? 20}%`, icon: <TrendingUp size={16} />, color: 'gold' },
+              { label: 'Commission Rate', value: `${referralData?.commissionRate ?? 25}%`, icon: <TrendingUp size={16} />, color: 'gold' },
             ].map((stat, i) => (
               <div key={i} className="stat-card">
                 <div className="stat-card-header">
@@ -73,12 +73,12 @@ export default function ReferralDashboard() {
           <div className="card" style={{ marginBottom: 24 }}>
             <div className="card-header">
               <span className="card-title"><Gift size={16} /> Your Referral Link</span>
-              <span className="badge badge-gold">{referralData?.commissionRate ?? 20}% Commission</span>
+              <span className="badge badge-gold">{referralData?.commissionRate ?? 25}% Commission</span>
             </div>
             <div className="card-body">
               <p style={{ fontSize: 13, color: '#8b949e', marginBottom: 16 }}>
                 Share your unique referral link. When someone subscribes using your link,
-                you earn {referralData?.commissionRate ?? 20}% commission on their subscription.
+                you earn {referralData?.commissionRate ?? 25}% commission on their subscription.
               </p>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
                 <div style={{
@@ -99,7 +99,7 @@ export default function ReferralDashboard() {
               </div>
               <div style={{ display: 'flex', gap: 20, fontSize: 12, color: '#545d68', flexWrap: 'wrap' }}>
                 <span>Your code: <strong style={{ color: '#d4af37', fontFamily: 'monospace' }}>{referralData?.referralCode}</strong></span>
-                <span>Commission: <strong style={{ color: '#3fb950' }}>{referralData?.commissionRate ?? 20}% per subscription</strong></span>
+                <span>Commission: <strong style={{ color: '#3fb950' }}>{referralData?.commissionRate ?? 25}% per subscription</strong></span>
               </div>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function ReferralDashboard() {
                   { step: '1', title: 'Share Your Link', desc: 'Copy your unique referral link and share it with friends, traders, or on social media' },
                   { step: '2', title: 'They Register', desc: 'When someone registers using your link they are linked to your account automatically' },
                   { step: '3', title: 'They Subscribe', desc: 'When your referral subscribes to any plan the commission is calculated automatically' },
-                  { step: '4', title: 'You Earn', desc: `Earn ${referralData?.commissionRate ?? 20}% commission on every subscription payment from your referrals` },
+                  { step: '4', title: 'You Earn', desc: `Earn ${referralData?.commissionRate ?? 25}% commission on every subscription payment from your referrals` },
                 ].map((item, i) => (
                   <div key={i} style={{ background: '#0d1117', borderRadius: 8, padding: 16, border: '1px solid #30363d', textAlign: 'center' }}>
                     <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(212,175,55,0.2)', color: '#d4af37', fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>{item.step}</div>
