@@ -89,8 +89,8 @@ function App() {
           <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />
           <Route path="/engine" element={<ProtectedRoute><SubscriptionGate title="AI Engine"><EnginePanel /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/analysis" element={<ProtectedRoute><AnalysisDebug /></ProtectedRoute>} />
-          <Route path="/terms" element={<ProtectedRoute><Terms /></ProtectedRoute>} />
-          <Route path="/privacy" element={<ProtectedRoute><Privacy /></ProtectedRoute>} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/" element={<HomeRedirect />} />
         </Routes>
       </Router>
