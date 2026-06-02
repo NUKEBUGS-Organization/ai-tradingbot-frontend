@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LANDING_URL } from '../config/env';
+import { API_BASE } from '../config/env';
 import BrandLogo from '../components/BrandLogo';
 
 export default function Register() {
@@ -14,6 +15,22 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [referralCode, setReferralCode] = useState('');
+  const [referrerName, setReferrerName] = useState('');
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref);
+      fetch(`${API_BASE}/referral/validate/${encodeURIComponent(ref)}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.valid) setReferrerName(data.referrerName);
+        })
+        .catch(() => {});
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +49,7 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      await register(name, email, password, acceptTerms);
+      await register(name, email, password, acceptTerms, referralCode);
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Registration failed');
@@ -73,6 +90,15 @@ export default function Register() {
           <h1 className="login-title">Create Account</h1>
           <p className="login-subtitle">Join VCL4X Trading Platform</p>
         </div>
+        {referrerName && (
+          <div style={{
+            background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)',
+            borderRadius: 8, padding: '10px 16px', marginBottom: 16, fontSize: 13,
+            color: '#d4af37', textAlign: 'center'
+          }}>
+            🎉 You were referred by <strong>{referrerName}</strong>! Sign up to get started.
+          </div>
+        )}
         {error && <div className="login-error">{error}</div>}
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">

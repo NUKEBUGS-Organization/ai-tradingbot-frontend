@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
-import { LayoutDashboard, Shield, Brain, MessageCircle, CreditCard, Activity, Users, LogOut, BarChart3, Cpu, History } from 'lucide-react';
+import { LayoutDashboard, Shield, Brain, MessageCircle, CreditCard, Activity, Users, LogOut, BarChart3, Cpu, History, Gift } from 'lucide-react';
 import BrandLogo from './BrandLogo';
 
 export default function Sidebar() {
@@ -19,12 +19,14 @@ export default function Sidebar() {
     { to: '/signals/history', icon: <History />, label: 'Signal History', section: 'main' },
     { to: '/risk', icon: <Shield />, label: 'Risk Management', section: 'main' },
     { to: '/subscriptions', icon: <CreditCard />, label: 'Subscriptions', section: 'tools' },
+    { to: '/referrals', icon: <Gift size={16} />, label: 'Referral Program', section: 'tools' },
     { to: '/analysis', icon: <Activity size={16} />, label: 'Analysis Log', section: 'tools' },
   ];
 
   if (user?.role === 'admin') {
     navItems.splice(1, 0, { to: '/admin', icon: <Users />, label: 'Admin Panel', section: 'main' });
     navItems.push({ to: '/telegram', icon: <MessageCircle />, label: 'Telegram', section: 'tools' });
+    navItems.push({ to: '/admin/referrals', icon: <Users size={16} />, label: 'Referral Management', section: 'tools' });
   }
 
   const mainItems = navItems.filter(i => i.section === 'main');

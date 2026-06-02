@@ -15,6 +15,8 @@ import SignalHistory from './pages/SignalHistory';
 import AnalysisDebug from './pages/AnalysisDebug';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import ReferralDashboard from './pages/ReferralDashboard';
+import AdminReferrals from './pages/AdminReferrals';
 import SubscriptionGate from './components/SubscriptionGate';
 
 function LoadingScreen() {
@@ -91,6 +93,8 @@ function App() {
           <Route path="/analysis" element={<ProtectedRoute><AnalysisDebug /></ProtectedRoute>} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/referrals" element={<ProtectedRoute><ReferralDashboard /></ProtectedRoute>} />
+          <Route path="/admin/referrals" element={<ProtectedRoute adminOnly><AdminReferrals /></ProtectedRoute>} />
           <Route path="/" element={<HomeRedirect />} />
         </Routes>
       </Router>

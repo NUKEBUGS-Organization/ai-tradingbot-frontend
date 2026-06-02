@@ -123,8 +123,8 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const register = async (name, email, password, acceptTerms) => {
-    const data = await api.register(name, email, password, acceptTerms);
+  const register = async (name, email, password, acceptTerms, referralCode = '') => {
+    const data = await api.register(name, email, password, acceptTerms, referralCode);
     if (!data?.token) throw new Error('Registration failed');
     persistSession(data.token, data, true);
     setToken(data.token);

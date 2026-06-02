@@ -181,10 +181,16 @@ export const api = {
     }
   },
 
-  register: async (name, email, password, acceptTerms = true) => {
+  register: async (name, email, password, acceptTerms = true, referralCode = '') => {
     return publicFetch(`${API_BASE}/auth/register`, {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, acceptTerms }),
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        acceptTerms,
+        ...(referralCode ? { referralCode } : {}),
+      }),
     });
   },
 
@@ -466,6 +472,32 @@ export const api = {
     return protectedFetch(`${API_BASE}/licenses/generate`, {
       method: 'POST',
       body: JSON.stringify({ userId, plan, durationDays }),
+    });
+  },
+
+  getReferralInfo: async () => {
+    return protectedFetch(`${API_BASE}/referral/my`);
+  },
+
+  generateReferralCode: async () => {
+    return protectedFetch(`${API_BASE}/referral/generate`, {
+      method: 'POST'
+    });
+  },
+
+  validateReferralCode: async (code) => {
+    const response = await fetch(`${API_BASE}/referral/validate/${code}`);
+    return response.json();
+  },
+
+  adminGetAllReferrals: async () => {
+    return protectedFetch(`${API_BASE}/referral/admin/all`);
+  },
+
+  adminUpdateCommission: async (referralId, data) => {
+    return protectedFetch(`${API_BASE}/referral/admin/${referralId}/commission`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
     });
   },
 };
