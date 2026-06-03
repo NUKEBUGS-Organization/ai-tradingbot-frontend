@@ -12,6 +12,8 @@ const TICKERS = [
   { key: 'XTIUSD', label: 'OIL', decimals: 2 },
 ];
 
+const PLATFORM_NAME = 'VCL4X AI ECOSYSTEM';
+
 export default function Header({ title }) {
   const { prices: wsPrices, connected, priceSource } = useWebSocket();
   const prices = useMt5Prices(wsPrices, priceSource);
@@ -30,7 +32,20 @@ export default function Header({ title }) {
         >
           <Menu size={16} />
         </button>
-        <h1 className="page-title">{title}</h1>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <span
+            style={{
+              fontSize: 10,
+              color: '#8b949e',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              lineHeight: 1.2,
+            }}
+          >
+            {PLATFORM_NAME}
+          </span>
+          <h1 className="page-title">{title}</h1>
+        </div>
         <div className="live-indicator">
           <span
             className="live-dot"

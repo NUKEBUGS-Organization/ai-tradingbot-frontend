@@ -39,7 +39,7 @@ export default function Sidebar() {
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <BrandLogo size={36} className="sidebar-logo-img" />
-          <div className="sidebar-logo-text">VCL<span>4X</span></div>
+          <div className="sidebar-logo-text">VCL<span>4X</span> AI ECOSYSTEM</div>
         </div>
       </div>
       <nav className="sidebar-nav">
