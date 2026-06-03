@@ -6,6 +6,7 @@ import api from '../services/api';
 import { Brain, TrendingUp, TrendingDown, Minus, Activity, Gauge, Clock, BarChart3, Zap, Eye } from 'lucide-react';
 import SignalDetailModal from '../components/SignalDetailModal';
 import { GradeBadge, SessionBadge, AmdPhaseBadge, H4BiasIndicator, RiskBadge } from '../components/signalBadges';
+import { displayProductName } from '../utils/product';
 
 export default function AISignals() {
   const { signals: liveSignals } = useWebSocket();
@@ -120,7 +121,7 @@ export default function AISignals() {
                         <span style={{ fontWeight: 700, fontSize: 13 }}>{s.symbol}</span>
                         <span className={`badge ${s.direction === 'BUY' ? 'badge-green' : 'badge-red'}`}>{s.direction}</span>
                       </div>
-                      <span style={{ fontSize: 10, color: '#545d68' }}>{s.strategy}</span>
+                      <span style={{ fontSize: 10, color: '#545d68' }}>{displayProductName(s.strategy)}</span>
                     </div>
                     <div style={{ display: 'flex', gap: 16, fontSize: 11, color: '#8b949e', fontFamily: 'var(--font-mono)' }}>
                       <span>Entry: {s.entryPrice}</span>
@@ -191,7 +192,7 @@ export default function AISignals() {
                         <td><SessionBadge session={s.session} /></td>
                         <td><RiskBadge level={s.riskLevel || s.risk_level} /></td>
                         <td style={{ fontSize: 11, color: '#8b949e', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {s.reason || s.strategy || '—'}
+                          {s.reason || displayProductName(s.strategy) || '—'}
                         </td>
                       </tr>
                     ))}
