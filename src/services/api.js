@@ -68,8 +68,8 @@ const publicFetch = async (url, options = {}) => {
 
 const mockUser = {
   _id: 'user123',
-  name: 'Demo Trader',
-  email: 'demo@gmail.com',
+  name: 'VCL4X Trader',
+  email: 'trader@vcl4xengine.com',
   subscription: { plan: 'professional', status: 'active', expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() },
   role: 'user',
   isActive: true,
@@ -78,7 +78,7 @@ const mockUser = {
   riskSettings: { maxDailyDrawdown: 5, maxRiskPerTrade: 2, maxOpenPositions: 5, dynamicLotSizing: true, spreadProtection: true, newsFilter: true },
   stats: { totalTrades: 312, winRate: 68.2, profitFactor: 1.87, dailyPnl: 580.25, maxDrawdown: 6.1 },
 };
-const mockAdmin = { ...mockUser, _id: 'admin123', name: 'Admin', email: 'admin@aurumx.com', role: 'admin' };
+const mockAdmin = { ...mockUser, _id: 'admin123', name: 'VCL4X Admin', email: 'admin@vcl4xengine.com', role: 'admin' };
 
 function normalizeSignalsResponse(data) {
   const list = Array.isArray(data) ? data : [];
@@ -168,13 +168,10 @@ export const api = {
     } catch (err) {
       if (!ALLOW_MOCK_AUTH) throw err;
       const normalized = String(email || '').toLowerCase().trim();
-      if (normalized === 'admin@aurumx.com' && password === 'admin123') {
+      if (normalized === 'admin@vcl4xengine.com' && password === 'AdminX@2026!#') {
         return { ...mockAdmin, token: 'mock-admin-token' };
       }
-      if (
-        (normalized === 'demo@gmail.com' || normalized === 'demo@aurumx.com') &&
-        password === 'demo123'
-      ) {
+      if (normalized === 'trader@vcl4xengine.com' && password === 'DemoX@2026!#') {
         return { ...mockUser, token: 'mock-user-token' };
       }
       throw err;

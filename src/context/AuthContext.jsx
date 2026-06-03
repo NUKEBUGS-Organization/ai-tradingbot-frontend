@@ -9,8 +9,8 @@ const REMEMBER_KEY = 'aurumx_remember';
 
 const mockAdmin = {
   _id: 'admin123',
-  name: 'Admin',
-  email: 'admin@aurumx.com',
+  name: 'VCL4X Admin',
+  email: 'admin@vcl4xengine.com',
   role: 'admin',
   isActive: true,
   mt5Account: { accountId: 'MT5-500042', connected: true, balance: 52430.8 },
@@ -19,8 +19,8 @@ const mockAdmin = {
 
 const mockUser = {
   _id: 'user123',
-  name: 'Demo Trader',
-  email: 'demo@gmail.com',
+  name: 'VCL4X Trader',
+  email: 'trader@vcl4xengine.com',
   role: 'user',
   isActive: true,
   subscription: { plan: 'professional', status: 'active', expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() },
