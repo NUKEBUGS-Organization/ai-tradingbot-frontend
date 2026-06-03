@@ -301,7 +301,7 @@ export default function AnalysisDebug() {
                 <div style={{ textAlign: 'center', padding: 48, color: '#8b949e' }}>
                   <Activity size={32} style={{ marginBottom: 12, opacity: 0.4 }} />
                   <div>No analysis data yet.</div>
-                  <div style={{ fontSize: 12, marginTop: 8 }}>Analysis runs every 90 seconds when MT5 is connected and auto-trade is enabled.</div>
+                  <div style={{ fontSize: 12, marginTop: 8 }}>Analysis runs every 90 seconds when candle data is available. Signal generation runs independently of MT5 connection.</div>
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>

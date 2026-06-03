@@ -17,8 +17,25 @@ export default function AISignals() {
 
   const loadData = async () => {
     try {
-      const [s, a] = await Promise.all([api.getSignals(), api.getMarketAnalysis()]);
-      setSignals(s);
+      const [s, engineS, a] = await Promise.all([
+        api.getSignals(),
+        api.getEngineActiveSignals().catch(() => []),
+        api.getMarketAnalysis(),
+      ]);
+      const bySymbol = new Map();
+      const add = (row) => {
+        if (!row?.symbol) return;
+        const sym = String(row.symbol).toUpperCase();
+        const t = new Date(row.createdAt || row.timestamp || 0).getTime();
+        const prev = bySymbol.get(sym);
+        const prevT = prev ? new Date(prev.createdAt || prev.timestamp || 0).getTime() : 0;
+        if (!prev || t >= prevT) bySymbol.set(sym, row);
+      };
+      (Array.isArray(engineS) ? engineS : []).forEach(add);
+      (Array.isArray(s) ? s : []).forEach(add);
+      setSignals([...bySymbol.values()].sort(
+        (x, y) => new Date(y.createdAt || y.timestamp || 0) - new Date(x.createdAt || x.timestamp || 0)
+      ));
       setAnalysis(a);
     } catch (err) { console.error(err); }
   };
@@ -138,8 +155,8 @@ export default function AISignals() {
                     {signals.length === 0 && (
                       <tr>
                         <td colSpan={11} style={{ textAlign: 'center', padding: 48, color: '#545d68' }}>
-                          No live engine signals yet. They appear when the bot publishes to Telegram
-                          (XAUUSD, EURUSD, GBPUSD, USDJPY) with strategy &quot;AMD AI Engine&quot;.
+                          No live engine signals yet. Signals appear when the engine generates a TRADE
+                          for any enabled symbol (XAUUSD, EURUSD, GBPUSD, USDJPY, XTIUSD).
                         </td>
                       </tr>
                     )}
