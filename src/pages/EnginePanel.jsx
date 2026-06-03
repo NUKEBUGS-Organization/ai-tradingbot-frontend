@@ -7,7 +7,7 @@ import { normalizeSignalsList, pickMt5LiveAccount, mapRiskSettingsForUi } from '
 import { useWebSocket } from '../services/websocket';
 import { Cpu, Activity, Wifi, WifiOff, Zap, Shield, RefreshCw, AlertTriangle, Play, BarChart3 } from 'lucide-react';
 
-const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'XTIUSD'];
+const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'GBPJPY', 'XTIUSD'];
 
 export default function EnginePanel() {
   const { user } = useAuth();
@@ -323,11 +323,11 @@ export default function EnginePanel() {
                     onChange={(e) => setSelectedSymbol(e.target.value)}
                     style={{ background: '#161b22', border: '1px solid #21262d', color: '#e6edf3', padding: '4px 8px', borderRadius: 6, fontSize: 12 }}
                   >
-                    <option value="XAUUSD">XAUUSD (Gold)</option>
-                    <option value="EURUSD">EURUSD</option>
-                    <option value="GBPUSD">GBPUSD</option>
-                    <option value="USDJPY">USDJPY</option>
-                    <option value="XTIUSD">XTIUSD (Oil)</option>
+                    {ANALYZE_SYMBOLS.map((sym) => (
+                      <option key={sym} value={sym}>
+                        {sym === 'XAUUSD' ? 'XAUUSD (Gold)' : sym === 'XTIUSD' ? 'XTIUSD (Oil)' : sym}
+                      </option>
+                    ))}
                   </select>
                   <button
                     type="button"
@@ -574,7 +574,7 @@ export default function EnginePanel() {
                       <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: '#545d68' }}>
                         {loading
                           ? 'Loading signals...'
-                          : 'No live engine signals yet. Signals appear here when the AI engine publishes to Telegram (XAUUSD, EURUSD, GBPUSD, USDJPY).'}
+                          : 'No live engine signals yet. Signals appear here when the engine publishes TRADE signals for enabled pairs.'}
                       </td></tr>
                     )}
                   </tbody>

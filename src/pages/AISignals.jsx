@@ -157,7 +157,7 @@ export default function AISignals() {
                       <tr>
                         <td colSpan={11} style={{ textAlign: 'center', padding: 48, color: '#545d68' }}>
                           No live engine signals yet. Signals appear when the engine generates a TRADE
-                          for any enabled symbol (XAUUSD, EURUSD, GBPUSD, USDJPY, XTIUSD).
+                          for any enabled symbol (XAUUSD, EURUSD, GBPUSD, USDJPY, GBPJPY, XTIUSD).
                         </td>
                       </tr>
                     )}

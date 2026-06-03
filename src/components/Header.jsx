@@ -9,6 +9,7 @@ const TICKERS = [
   { key: 'EURUSD', label: 'EUR', decimals: 5 },
   { key: 'GBPUSD', label: 'GBP', decimals: 5 },
   { key: 'USDJPY', label: 'JPY', decimals: 3 },
+  { key: 'GBPJPY', label: 'GJ', decimals: 3 },
   { key: 'XTIUSD', label: 'OIL', decimals: 2 },
 ];
 
