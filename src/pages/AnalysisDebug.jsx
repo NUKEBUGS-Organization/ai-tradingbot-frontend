@@ -100,7 +100,7 @@ function AnalysisRow({ analysis, index }) {
       {expanded && (
         <tr style={{ background: 'rgba(13,17,23,0.8)' }}>
           <td colSpan={6} style={{ padding: '16px 24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }} className="analysis-detail-grid">
               
               {analysisData.h4_bias && (
                 <div style={{ background: '#161b22', borderRadius: 8, padding: 12, border: '1px solid var(--border-subtle)' }}>
@@ -253,7 +253,7 @@ export default function AnalysisDebug() {
         <Header title="Analysis Debug Log" />
         <div className="page-content">
 
-          <div className="stats-grid" style={{ marginBottom: 24 }}>
+          <div className="stats-grid analysis-stats-grid" style={{ marginBottom: 24 }}>
             {[
               { label: 'Total Analyses', value: total, color: '#58a6ff' },
               { label: 'Trade Signals', value: summary.TRADE || 0, color: '#3fb950' },
@@ -294,7 +294,7 @@ export default function AnalysisDebug() {
                 </button>
               </div>
             </div>
-            <div style={{ overflowX: 'auto' }}>
+            <div className="overflow-table-wrapper analysis-table-wrap">
               {loading ? (
                 <div style={{ textAlign: 'center', padding: 48, color: '#8b949e' }}>Loading analysis history...</div>
               ) : history.length === 0 ? (

@@ -86,7 +86,7 @@ export default function RiskManagement() {
       <main className="main-content">
         <Header title="Risk Management" />
         <div className="page-content">
-          <div className="stats-grid">
+          <div className="stats-grid risk-stats-grid">
             {riskMetrics.map((m, i) => (
               <div className="stat-card" key={i}>
                 <div className="stat-card-header">
@@ -132,6 +132,7 @@ export default function RiskManagement() {
                 {riskLevels.map((level, i) => (
                   <div
                     key={i}
+                    className="risk-level-card"
                     role="button"
                     tabIndex={0}
                     onClick={() => !presetLoading && handlePresetChange(level.label)}
@@ -162,7 +163,7 @@ export default function RiskManagement() {
           <div className="card">
             <div className="card-header"><span className="card-title"><BarChart3 size={16} /> Drawdown Monitor</span></div>
             <div className="card-body">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+              <div className="drawdown-grid">
                 {[
                   { label: 'Daily DD', value: ddPct, max: risk.maxDailyDrawdown || 5, color: parseFloat(ddPct) > 3 ? '#f85149' : '#3fb950' },
                   { label: 'Weekly DD', value: weeklyDD.toFixed(1), max: 10, color: '#d4af37' },

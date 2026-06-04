@@ -172,7 +172,7 @@ export default function Register() {
               >
                 Privacy Policy
               </a>
-              , and{' '}
+              ,{' '}
               <a
                 href={`${LANDING_URL}/refund`}
                 target="_blank"
@@ -180,6 +180,15 @@ export default function Register() {
                 style={{ color: '#d4af37' }}
               >
                 Refund Policy
+              </a>
+              , and{' '}
+              <a
+                href={`${LANDING_URL}/risk-disclosure`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#d4af37' }}
+              >
+                Risk Disclosure
               </a>
             </span>
           </label>

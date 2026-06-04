@@ -74,7 +74,7 @@ export default function TelegramPanel() {
             </div>
           </div>
 
-          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: 24 }}>
+          <div className="stats-grid telegram-stats-grid" style={{ marginBottom: 24 }}>
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-label">Bot Status</span>
@@ -155,10 +155,11 @@ export default function TelegramPanel() {
                 <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
                   <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 8 }}>Broadcast Message</div>
                   <textarea
+                    className="telegram-broadcast-textarea"
                     value={testMessage}
                     onChange={e => setTestMessage(e.target.value)}
                     placeholder="Type a message to broadcast to all subscribers..."
-                    style={{ width: '100%', minHeight: 80, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-sm)', padding: 10, color: 'var(--text-primary)', fontSize: 13, resize: 'vertical', boxSizing: 'border-box' }}
+                    style={{ minHeight: 80, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-sm)', padding: 10, color: 'var(--text-primary)', fontSize: 13, resize: 'vertical' }}
                   />
                   {broadcastResult && (
                     <div style={{ marginTop: 8, fontSize: 12, color: broadcastResult.success ? '#3fb950' : '#f85149' }}>

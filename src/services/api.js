@@ -191,6 +191,15 @@ export const api = {
     });
   },
 
+  acceptRiskDisclosure: async () => {
+    const result = await protectedFetch(
+      `${API_BASE}/auth/accept-risk-disclosure`,
+      { method: 'POST' },
+      { acceptedRiskDisclosureAt: new Date().toISOString() }
+    );
+    return result;
+  },
+
   logout: async () => {
     await protectedFetch(`${API_BASE}/auth/logout`, { method: 'POST' }, {});
   },

@@ -132,8 +132,22 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const acceptRiskDisclosure = useCallback(async () => {
+    const activeToken = readStoredToken();
+    const data = await api.acceptRiskDisclosure();
+    const acceptedAt = data?.acceptedRiskDisclosureAt || new Date().toISOString();
+    setUser((prev) => {
+      const next = { ...(prev || {}), acceptedRiskDisclosureAt: acceptedAt };
+      const remember = localStorage.getItem(REMEMBER_KEY) === '1';
+      const storage = remember ? localStorage : sessionStorage;
+      if (activeToken) storage.setItem(USER_KEY, JSON.stringify(next));
+      return next;
+    });
+    return { acceptedRiskDisclosureAt: acceptedAt };
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, fetchProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, fetchProfile, acceptRiskDisclosure }}>
       {children}
     </AuthContext.Provider>
   );

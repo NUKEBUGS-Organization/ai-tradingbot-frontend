@@ -111,7 +111,7 @@ export default function Dashboard() {
         <Header title="Trading Dashboard" />
         <div className="page-content">
           {/* Stats Row */}
-          <div className="stats-grid">
+          <div className="stats-grid dashboard-stats-grid">
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-label">Balance</span>
@@ -169,12 +169,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="live-chart-body" style={{ marginBottom: 24 }}>
+          <div className="live-chart-body dashboard-chart" style={{ marginBottom: 24 }}>
             <ForexChartDashboard />
           </div>
 
           {/* Charts Row */}
-          <div className="grid-2-1">
+          <div className="grid-2-1 dashboard-bottom-grid">
             <div className="card">
               <div className="card-header">
                 <span className="card-title"><Activity size={16} /> Equity Curve</span>
@@ -273,7 +273,7 @@ export default function Dashboard() {
           </div>
 
           {/* Connection Status */}
-          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <div className="stats-grid dashboard-connection-grid">
             <div className="stat-card" style={{ padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span className={`status-dot ${user?.mt5Account?.connected ? 'online' : 'offline'}`}></span>
@@ -316,7 +316,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="card-body" style={{ padding: 0 }}>
-              <div className="table-container">
+              <div className="table-container overflow-table-wrapper table-responsive">
                 <table>
                   <thead>
                     <tr>

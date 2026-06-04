@@ -22,18 +22,19 @@ export default function Header({ title }) {
   const { toggle } = useSidebar();
 
   return (
-    <header className="top-bar">
-      <div className="top-bar-left">
+    <header className="top-bar header">
+      <div className="top-bar-left header-left">
         <button
           type="button"
-          className="top-bar-btn mobile-menu-btn"
+          className="top-bar-btn mobile-menu-btn header-menu-btn"
           onClick={toggle}
           aria-label="Open navigation menu"
         >
           <Menu size={16} />
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
           <span
+            className="hide-mobile"
             style={{
               fontSize: 10,
               color: '#8b949e',
@@ -44,7 +45,7 @@ export default function Header({ title }) {
           >
             {PLATFORM_NAME}
           </span>
-          <h1 className="page-title">{title}</h1>
+          <h1 className="page-title header-title">{title}</h1>
         </div>
         <div className="live-indicator">
           <span
@@ -59,7 +60,7 @@ export default function Header({ title }) {
         </div>
       </div>
       <div className="top-bar-right">
-        <div className="price-ticker">
+        <div className="price-ticker header-prices">
           {TICKERS.map(({ key, label, decimals }) => {
             const q = prices[key] || prices[`${key}m`] || prices[key.replace('USD', '')];
             const bid = q?.bid;

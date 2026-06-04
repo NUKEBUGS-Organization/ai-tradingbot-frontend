@@ -52,7 +52,7 @@ export default function AISignals() {
         <div className="page-content">
           {/* Market Overview */}
           {analysis && (
-            <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+            <div className="stats-grid signals-market-grid">
               <div className="stat-card">
                 <div className="stat-card-header"><span className="stat-card-label">Market Bias</span><div className="stat-card-icon green"><TrendingUp size={16} /></div></div>
                 <div className="stat-card-value" style={{ color: biasColor[analysis.marketBias], textTransform: 'uppercase', fontSize: 20 }}>{analysis.marketBias}</div>
@@ -86,7 +86,7 @@ export default function AISignals() {
             </div>
           )}
 
-          <div className="grid-2">
+          <div className="grid-2 signals-indicators-grid">
             {/* Indicators */}
             {analysis && (
               <div className="card">
@@ -143,7 +143,7 @@ export default function AISignals() {
           <div className="card">
             <div className="card-header"><span className="card-title"><Brain size={16} /> Live Engine Signals</span><span className="badge badge-blue">{signals.length}</span></div>
             <div className="card-body" style={{ padding: 0 }}>
-              <div className="table-container">
+              <div className="table-container overflow-table-wrapper signals-table-wrap">
                 <table>
                   <thead>
                     <tr>

@@ -18,6 +18,7 @@ import Privacy from './pages/Privacy';
 import ReferralDashboard from './pages/ReferralDashboard';
 import AdminReferrals from './pages/AdminReferrals';
 import SubscriptionGate from './components/SubscriptionGate';
+import RiskDisclosureGate from './components/RiskDisclosureGate';
 
 function LoadingScreen() {
   return (
@@ -63,6 +64,7 @@ function HomeRedirect() {
 function App() {
   return (
     <AuthProvider>
+      <RiskDisclosureGate>
       <SidebarProvider>
       <Router>
         <Routes>
@@ -99,6 +101,7 @@ function App() {
         </Routes>
       </Router>
       </SidebarProvider>
+      </RiskDisclosureGate>
     </AuthProvider>
   );
 }

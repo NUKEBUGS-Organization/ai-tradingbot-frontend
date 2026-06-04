@@ -51,7 +51,7 @@ export default function ReferralDashboard() {
         <Header title="Referral Program" />
         <div className="page-content">
 
-          <div className="stats-grid" style={{ marginBottom: 24 }}>
+          <div className="stats-grid referral-stats-grid" style={{ marginBottom: 24 }}>
             {[
               { label: 'Total Referrals', value: referralData?.stats?.totalReferrals ?? 0, icon: <Users size={16} />, color: 'blue' },
               { label: 'Subscribed', value: referralData?.stats?.subscribed ?? 0, icon: <TrendingUp size={16} />, color: 'gold' },
@@ -80,9 +80,9 @@ export default function ReferralDashboard() {
                 Share your unique referral link. When someone subscribes using your link,
                 you earn {referralData?.commissionRate ?? 25}% commission on their subscription.
               </p>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
-                <div style={{
-                  flex: 1, minWidth: 200, background: '#0d1117', border: '1px solid #30363d',
+              <div className="referral-link-row" style={{ marginBottom: 16 }}>
+                <div className="referral-link-input" style={{
+                  background: '#0d1117', border: '1px solid #30363d',
                   borderRadius: 8, padding: '10px 14px', fontSize: 13,
                   color: '#d4af37', fontFamily: 'monospace', wordBreak: 'break-all'
                 }}>
@@ -91,7 +91,7 @@ export default function ReferralDashboard() {
                 <button
                   type="button"
                   onClick={copyLink}
-                  className="btn btn-primary"
+                  className="btn btn-primary mobile-full"
                   style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}
                 >
                   {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Link</>}
@@ -109,7 +109,7 @@ export default function ReferralDashboard() {
               <span className="card-title">How It Works</span>
             </div>
             <div className="card-body">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
+              <div className="referral-how-grid">
                 {[
                   { step: '1', title: 'Share Your Link', desc: 'Copy your unique referral link and share it with friends, traders, or on social media' },
                   { step: '2', title: 'They Register', desc: 'When someone registers using your link they are linked to your account automatically' },
@@ -130,7 +130,7 @@ export default function ReferralDashboard() {
             <div className="card-header">
               <span className="card-title"><Users size={16} /> My Referrals ({referralData?.referrals?.length ?? 0})</span>
             </div>
-            <div style={{ overflowX: 'auto' }}>
+            <div className="overflow-table-wrapper referrals-table-wrap">
               {!loading && referralData?.referrals?.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 48, color: '#8b949e' }}>
                   <Users size={32} style={{ marginBottom: 12, opacity: 0.4 }} />

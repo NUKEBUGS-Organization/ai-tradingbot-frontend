@@ -8,7 +8,7 @@ import BrandLogo from './BrandLogo';
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { open, close } = useSidebar();
+  const { open: mobileOpen, close, toggle } = useSidebar();
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -34,8 +34,32 @@ export default function Sidebar() {
 
   return (
     <>
-      {open && <div className="sidebar-overlay" onClick={close} aria-hidden="true" />}
-      <aside className={`sidebar${open ? ' open' : ''}`}>
+      <button
+        type="button"
+        className="mobile-menu-btn sidebar-hamburger"
+        onClick={toggle}
+        aria-label="Open navigation menu"
+      >
+        ☰
+      </button>
+
+      {mobileOpen && (
+        <div
+          className="sidebar-overlay mobile-overlay"
+          onClick={close}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={`sidebar${mobileOpen ? ' open mobile-open' : ''}`}>
+      <button
+        type="button"
+        className="mobile-close-btn"
+        onClick={close}
+        aria-label="Close navigation menu"
+      >
+        ✕
+      </button>
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <BrandLogo size={36} className="sidebar-logo-img" />
