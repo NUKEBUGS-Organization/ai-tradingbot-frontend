@@ -221,7 +221,7 @@ export const api = {
     const result = await protectedFetch(`${API_BASE}/engine/trades`, {}, []);
     const all = Array.isArray(result) ? result : (result?.trades || []);
     if (params.includes('status=open')) {
-      return { trades: all.filter((t) => t.status === 'pending' || t.status === 'executed') };
+      return { trades: all.filter((t) => t.status === 'pending') };
     }
     if (params.includes('status=closed')) {
       return { trades: all.filter((t) => t.status === 'closed') };
