@@ -61,6 +61,8 @@ const publicFetch = async (url, options = {}) => {
   if (!res.ok) {
     const err = new Error(data.message || `Request failed (${res.status})`);
     err.status = res.status;
+    err.code = data.code;
+    err.email = data.email;
     throw err;
   }
   return data;
@@ -182,6 +184,34 @@ export const api = {
         acceptTerms,
         ...(referralCode ? { referralCode } : {}),
       }),
+    });
+  },
+
+  verifyEmail: async (token) => {
+    return publicFetch(`${API_BASE}/auth/verify-email`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  },
+
+  resendVerification: async (email) => {
+    return publicFetch(`${API_BASE}/auth/resend-verification`, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  forgotPassword: async (email) => {
+    return publicFetch(`${API_BASE}/auth/forgot-password`, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  resetPassword: async (token, password) => {
+    return publicFetch(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
     });
   },
 

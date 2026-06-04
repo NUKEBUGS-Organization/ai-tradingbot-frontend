@@ -49,7 +49,11 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      await register(name, email, password, acceptTerms, referralCode);
+      const data = await register(name, email, password, acceptTerms, referralCode);
+      if (data?.requiresVerification) {
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
+        return;
+      }
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Registration failed');

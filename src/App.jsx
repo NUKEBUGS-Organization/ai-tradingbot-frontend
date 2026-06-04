@@ -4,6 +4,9 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { SidebarProvider } from './context/SidebarContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import RiskManagement from './pages/RiskManagement';
@@ -84,6 +87,9 @@ function App() {
               </GuestRoute>
             }
           />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<ProtectedRoute><SubscriptionGate title="Dashboard"><Dashboard /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
           <Route path="/risk" element={<ProtectedRoute><SubscriptionGate title="Risk Management"><RiskManagement /></SubscriptionGate></ProtectedRoute>} />

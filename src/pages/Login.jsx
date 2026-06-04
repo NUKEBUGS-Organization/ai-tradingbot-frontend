@@ -9,6 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -21,6 +22,11 @@ export default function Login() {
       const data = await login(email, password, remember);
       navigate(data.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
+      if (err.code === 'EMAIL_NOT_VERIFIED') {
+        setUnverifiedEmail(err.email || email);
+      } else {
+        setUnverifiedEmail('');
+      }
       setError(err.message);
     } finally {
       setLoading(false);
@@ -54,6 +60,16 @@ export default function Login() {
         </div>
 
         {error && <div className="login-error">{error}</div>}
+        {unverifiedEmail && (
+          <div style={{ marginBottom: 16, fontSize: 13, textAlign: 'center' }}>
+            <Link
+              to={`/verify-email?email=${encodeURIComponent(unverifiedEmail)}`}
+              style={{ color: '#d4af37' }}
+            >
+              Resend verification email
+            </Link>
+          </div>
+        )}
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -71,9 +87,9 @@ export default function Login() {
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
               Remember me
             </label>
-            <a href={`${LANDING_URL}/#support`} className="login-forgot">
-              Need help?
-            </a>
+            <Link to="/forgot-password" className="login-forgot">
+              Forgot password?
+            </Link>
           </div>
           <button id="login-submit" type="submit" className="login-btn" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
