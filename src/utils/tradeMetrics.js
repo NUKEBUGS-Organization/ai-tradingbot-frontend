@@ -89,6 +89,7 @@ function normalizeLiveAccount(acc) {
   if (!acc || (acc.balance == null && acc.equity == null)) return null;
   const balance = Number(acc.balance) || 0;
   const equity = Number(acc.equity) || balance;
+  if (isMockDemoBalance(balance) && isMockDemoBalance(equity)) return null;
   return {
     balance,
     equity,
@@ -100,7 +101,12 @@ function normalizeLiveAccount(acc) {
   };
 }
 
-const MOCK_DEMO_BALANCE = 52430.8;
+export const MOCK_DEMO_BALANCE = 52430.8;
+
+export function isMockDemoBalance(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && Math.abs(n - MOCK_DEMO_BALANCE) < 1;
+}
 
 export function isSimulatedWsAccount(wsAccount) {
   if (!wsAccount) return true;

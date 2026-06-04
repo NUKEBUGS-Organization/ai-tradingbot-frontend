@@ -5,7 +5,7 @@ import ForexChartDashboard from '../components/tradingview/ForexChartDashboard';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
-import { pickMt5LiveAccount, isSimulatedWsAccount } from '../utils/tradeMetrics';
+import { pickMt5LiveAccount, isSimulatedWsAccount, isMockDemoBalance } from '../utils/tradeMetrics';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, TrendingUp, TrendingDown, Activity, Target, BarChart3, Wifi, WifiOff, Zap, Shield, MessageCircle } from 'lucide-react';
 
@@ -18,13 +18,13 @@ export default function Dashboard() {
   const [closedTrades, setClosedTrades] = useState([]);
   const [equityPeriod, setEquityPeriod] = useState('ALL');
   const [tab, setTab] = useState('open');
-  const [mt5Live, setMt5Live] = useState(null);
+  const [engineStatus, setEngineStatus] = useState(null);
   useEffect(() => {
     loadData();
     const pollMt5 = async () => {
       try {
         const eng = await api.getEngineStatus();
-        setMt5Live(pickMt5LiveAccount(eng, null));
+        setEngineStatus(eng);
       } catch (_) { /* ignore */ }
     };
     pollMt5();
@@ -45,22 +45,20 @@ export default function Dashboard() {
     } catch (err) { console.error(err); }
   };
 
-  const engineBalance = mt5Live?.balance != null && Number(mt5Live.balance) > 0 ? Number(mt5Live.balance) : null;
-  const engineEquity = mt5Live?.equity != null && Number(mt5Live.equity) > 0 ? Number(mt5Live.equity) : null;
-  const engineDailyPnl = mt5Live?.dailyPnl != null ? Number(mt5Live.dailyPnl) : null;
-
   const wsAccount = !isSimulatedWsAccount(account) && account?.source === 'mt5' ? account : null;
-  const wsBalance = wsAccount?.balance != null && Number(wsAccount.balance) > 0 ? Number(wsAccount.balance) : null;
-  const wsEquity = wsAccount?.equity != null && Number(wsAccount.equity) > 0 ? Number(wsAccount.equity) : null;
-  const wsDailyPnl = wsAccount?.dailyPnl != null ? Number(wsAccount.dailyPnl) : null;
-
-  const authMt5 = user?.mt5Account?.connected ? user.mt5Account : null;
-  const authBalance = authMt5?.balance != null && Number(authMt5.balance) > 0 ? Number(authMt5.balance) : null;
-  const authEquity = authMt5?.equity != null && Number(authMt5.equity) > 0 ? Number(authMt5.equity) : null;
-
-  const bal = engineBalance ?? wsBalance ?? authBalance ?? 0;
-  const eq = engineEquity ?? wsEquity ?? authEquity ?? 0;
-  const dailyPnl = engineDailyPnl ?? wsDailyPnl ?? user?.stats?.dailyPnl ?? 0;
+  const liveMt5 = pickMt5LiveAccount(engineStatus, wsAccount);
+  const bal =
+    liveMt5?.balance != null && Number(liveMt5.balance) > 0 && !isMockDemoBalance(liveMt5.balance)
+      ? Number(liveMt5.balance)
+      : null;
+  const eq =
+    liveMt5?.equity != null && Number(liveMt5.equity) > 0 && !isMockDemoBalance(liveMt5.equity)
+      ? Number(liveMt5.equity)
+      : null;
+  const dailyPnl = liveMt5?.dailyPnl != null ? Number(liveMt5.dailyPnl) : null;
+  const hasLiveMt5Account = bal != null && eq != null;
+  const fmtMoney = (n) =>
+    n == null ? '—' : `$${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
   const periodMs = { '1D': 86400000, '1W': 7 * 86400000, '1M': 30 * 86400000 };
   const filteredCurve = equityPeriod === 'ALL'
@@ -117,18 +115,26 @@ export default function Dashboard() {
                 <span className="stat-card-label">Balance</span>
                 <div className="stat-card-icon gold"><DollarSign size={16} /></div>
               </div>
-              <div className="stat-card-value">${bal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-              <div className="stat-card-change up">MT5 Account</div>
+              <div className="stat-card-value">{fmtMoney(bal)}</div>
+              <div className={`stat-card-change ${hasLiveMt5Account ? 'up' : ''}`}>
+                {hasLiveMt5Account ? 'MT5 Account' : 'Awaiting MT5 account sync'}
+              </div>
             </div>
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-label">Equity</span>
                 <div className="stat-card-icon blue"><Activity size={16} /></div>
               </div>
-              <div className="stat-card-value">${eq.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-              <div className={`stat-card-change ${eq >= bal ? 'up' : 'down'}`}>
-                {eq >= bal ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                {((eq - bal) / bal * 100).toFixed(2)}%
+              <div className="stat-card-value">{fmtMoney(eq)}</div>
+              <div className={`stat-card-change ${hasLiveMt5Account && eq >= bal ? 'up' : hasLiveMt5Account ? 'down' : ''}`}>
+                {hasLiveMt5Account ? (
+                  <>
+                    {eq >= bal ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                    {bal > 0 ? `${(((eq - bal) / bal) * 100).toFixed(2)}%` : '—'}
+                  </>
+                ) : (
+                  '—'
+                )}
               </div>
             </div>
             <div className="stat-card">
@@ -138,10 +144,12 @@ export default function Dashboard() {
                   {dailyPnl >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
                 </div>
               </div>
-              <div className={`stat-card-value ${dailyPnl >= 0 ? 'positive' : 'negative'}`}>
-                {dailyPnl >= 0 ? '+' : ''}${dailyPnl.toFixed(2)}
+              <div className={`stat-card-value ${dailyPnl != null && dailyPnl >= 0 ? 'positive' : dailyPnl != null ? 'negative' : ''}`}>
+                {dailyPnl != null ? `${dailyPnl >= 0 ? '+' : ''}$${dailyPnl.toFixed(2)}` : '—'}
               </div>
-              <div className={`stat-card-change ${dailyPnl >= 0 ? 'up' : 'down'}`}>Today</div>
+              <div className={`stat-card-change ${dailyPnl != null && dailyPnl >= 0 ? 'up' : dailyPnl != null ? 'down' : ''}`}>
+                {hasLiveMt5Account ? 'Today' : '—'}
+              </div>
             </div>
             <div className="stat-card">
               <div className="stat-card-header">

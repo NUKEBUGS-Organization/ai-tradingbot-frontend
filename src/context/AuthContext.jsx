@@ -13,7 +13,7 @@ const mockAdmin = {
   email: 'admin@vcl4xengine.com',
   role: 'admin',
   isActive: true,
-  mt5Account: { accountId: 'MT5-500042', connected: true, balance: 52430.8 },
+  mt5Account: { accountId: null, server: null, connected: false, balance: null, equity: null },
   telegram: { chatId: '987654321', connected: true },
 };
 
@@ -24,7 +24,7 @@ const mockUser = {
   role: 'user',
   isActive: true,
   subscription: { plan: 'professional', status: 'active', expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() },
-  mt5Account: { accountId: 'MT5-100200', connected: true, balance: 10000.0 },
+  mt5Account: { accountId: null, server: null, connected: false, balance: null, equity: null },
   riskSettings: { maxDailyDrawdown: 5, maxRiskPerTrade: 2, maxOpenPositions: 5 },
 };
 
