@@ -45,6 +45,8 @@ export default function AISignals() {
   const volColor = { low: '#3fb950', medium: '#d4af37', high: '#f0883e', extreme: '#f85149' };
   const dirIcon = { BUY: <TrendingUp size={14} />, SELL: <TrendingDown size={14} />, NEUTRAL: <Minus size={14} /> };
 
+  const validSignals = signals.filter((s) => s.symbol && s.entry && s.entry !== 0);
+
   return (
     <div className="app-layout">
       <Sidebar />
@@ -148,26 +150,29 @@ export default function AISignals() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP</th>
+                      <th>ID</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP</th>
                       <th>Conf</th><th>Grade</th><th>AMD</th><th>H4</th><th>Session</th><th>Risk</th><th>Reason</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {signals.length === 0 && (
+                    {validSignals.length === 0 && (
                       <tr>
-                        <td colSpan={11} style={{ textAlign: 'center', padding: 48, color: '#545d68' }}>
+                        <td colSpan={12} style={{ textAlign: 'center', padding: 48, color: '#545d68' }}>
                           No live engine signals yet. Signals appear when the engine generates a TRADE
                           for any enabled symbol (XAUUSD, EURUSD, GBPUSD, USDJPY, GBPJPY, XTIUSD).
                         </td>
                       </tr>
                     )}
-                    {signals.map(s => (
+                    {validSignals.map(s => (
                       <tr
                         key={s._id}
                         onClick={() => setSelectedSignal(s)}
                         style={{ cursor: 'pointer' }}
                         title="Click for details"
                       >
+                        <td style={{ color: '#8b949e', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                          {s._id && s._id !== 'undefined' ? s._id.slice(-6) : '—'}
+                        </td>
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{s.symbol}</td>
                         <td><span className={`badge ${s.direction === 'BUY' ? 'badge-green' : s.direction === 'SELL' ? 'badge-red' : 'badge-blue'}`}>{s.direction}</span></td>
                         <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>

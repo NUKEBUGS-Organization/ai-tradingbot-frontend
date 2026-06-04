@@ -380,11 +380,6 @@ export const api = {
       body: JSON.stringify({ enabled }),
     }),
 
-  testFireTrade: async (symbol = 'XAUUSD', direction = 'BUY') =>
-    protectedFetch(`${API_BASE}/engine/test-fire-trade`, {
-      method: 'POST',
-      body: JSON.stringify({ symbol, direction }),
-    }),
   updateTelegramConfig: async () => ({
     success: false,
     message: 'Telegram configuration is managed on the server.',
