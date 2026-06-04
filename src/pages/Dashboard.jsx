@@ -82,7 +82,7 @@ export default function Dashboard() {
     let winStreak = 0;
     let lossStreak = 0;
     const sorted = [...closed].sort(
-      (a, b) => new Date(a.closeTime || a.createdAt) - new Date(b.closeTime || b.createdAt)
+      (a, b) => new Date(a.closedAt || a.closeTime || a.createdAt) - new Date(b.closedAt || b.closeTime || b.createdAt)
     );
     sorted.forEach((t) => {
       if ((t.profit ?? 0) > 0) {
@@ -328,18 +328,18 @@ export default function Dashboard() {
                   <tbody>
                     {(trades?.[tab] || []).map(t => (
                       <tr key={t._id}>
-                        <td style={{ color: '#8b949e' }}>{t.ticket}</td>
+                        <td style={{ color: '#8b949e' }}>{t.ticket || t._id?.slice(-6)}</td>
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{t.symbol}</td>
                         <td><span className={`badge ${t.type === 'BUY' ? 'badge-green' : 'badge-red'}`}>{t.type}</span></td>
-                        <td>{t.lotSize}</td>
-                        <td>{t.openPrice}</td>
-                        {tab === 'closed' && <td>{t.closePrice}</td>}
-                        <td style={{ color: '#f85149' }}>{t.stopLoss}</td>
-                        <td style={{ color: '#3fb950' }}>{t.takeProfit}</td>
-                        <td style={{ color: t.profit >= 0 ? '#3fb950' : '#f85149', fontWeight: 700 }}>
-                          {t.profit >= 0 ? '+' : ''}{t.profit?.toFixed(2)}
+                        <td>{t.lotSize ?? '—'}</td>
+                        <td>{t.entry ?? '—'}</td>
+                        {tab === 'closed' && <td>{t.closePrice ?? '—'}</td>}
+                        <td style={{ color: '#f85149' }}>{t.sl ?? '—'}</td>
+                        <td style={{ color: '#3fb950' }}>{t.tp ?? '—'}</td>
+                        <td style={{ color: (t.profit ?? 0) >= 0 ? '#3fb950' : '#f85149', fontWeight: 700 }}>
+                          {(t.profit ?? 0) >= 0 ? '+' : ''}{(t.profit ?? 0).toFixed(2)}
                         </td>
-                        <td><span className="badge badge-gold">{t.signal?.strategy || 'AI'}</span></td>
+                        <td><span className="badge badge-gold">{t.amdPhase || t.grade || 'AMD'}</span></td>
                       </tr>
                     ))}
                     {(trades?.[tab] || []).length === 0 && (

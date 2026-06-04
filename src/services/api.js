@@ -73,10 +73,10 @@ const mockUser = {
   subscription: { plan: 'professional', status: 'active', expiresAt: new Date(Date.now() + 30 * 86400000).toISOString() },
   role: 'user',
   isActive: true,
-  mt5Account: { accountId: 'MT5-500042', server: 'VCL4X-Live', connected: true, balance: 52430.8, equity: 53210.45, margin: 2100, freeMargin: 51110.45 },
-  telegram: { chatId: '987654321', connected: true, notifications: true },
+  mt5Account: { accountId: null, server: null, connected: false, balance: null, equity: null, margin: null, freeMargin: null },
+  telegram: { chatId: null, connected: false, notifications: false },
   riskSettings: { maxDailyDrawdown: 5, maxRiskPerTrade: 2, maxOpenPositions: 5, dynamicLotSizing: true, spreadProtection: true, newsFilter: true },
-  stats: { totalTrades: 312, winRate: 68.2, profitFactor: 1.87, dailyPnl: 580.25, maxDrawdown: 6.1 },
+  stats: null,
 };
 const mockAdmin = { ...mockUser, _id: 'admin123', name: 'VCL4X Admin', email: 'admin@vcl4xengine.com', role: 'admin' };
 
@@ -112,17 +112,8 @@ function buildMarketAnalysisFromSignals(signals) {
   };
 }
 
-function computeTradeStats(closedTrades, openTrades, userStats) {
+function computeTradeStats(closedTrades, openTrades) {
   const closed = closedTrades || [];
-  if (userStats?.totalTrades) {
-    return {
-      totalTrades: userStats.totalTrades,
-      openTrades: (openTrades || []).length,
-      winRate: String(userStats.winRate ?? 0),
-      profitFactor: String(userStats.profitFactor ?? 0),
-      totalProfit: String(userStats.monthlyPnl ?? userStats.dailyPnl ?? 0),
-    };
-  }
   const wins = closed.filter((t) => (t.profit ?? 0) > 0);
   const totalProfit = closed.reduce((sum, t) => sum + (t.profit ?? 0), 0);
   const grossProfit = wins.reduce((sum, t) => sum + (t.profit ?? 0), 0);
@@ -140,16 +131,19 @@ function computeTradeStats(closedTrades, openTrades, userStats) {
 
 function buildEquityCurveFromTrades(closedTrades, startBalance = 10000) {
   const sorted = [...(closedTrades || [])].sort(
-    (a, b) => new Date(a.closeTime || a.createdAt) - new Date(b.closeTime || b.createdAt)
+    (a, b) => new Date(a.closedAt || a.createdAt) - new Date(b.closedAt || b.createdAt)
   );
   let balance = startBalance;
-  const curve = [{ date: new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0], balance: startBalance }];
+  const curve = [
+    {
+      date: new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0],
+      balance: startBalance,
+    },
+  ];
   sorted.forEach((trade) => {
     balance += trade.profit ?? 0;
     curve.push({
-      date: trade.closeTime
-        ? new Date(trade.closeTime).toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0],
+      date: new Date(trade.closedAt || trade.createdAt).toISOString().split('T')[0],
       balance: parseFloat(balance.toFixed(2)),
       profit: trade.profit,
     });
@@ -222,30 +216,30 @@ export const api = {
     }
   },
 
-  // —— Trades ——
+  // —— Trades (AITrade via engine — not user-scoped Trade model) ——
   getTrades: async (params = '') => {
-    const qs = params && !params.startsWith('?') ? `?${params}` : params;
-    const result = await protectedFetch(`${API_BASE}/trades${qs}`);
-    if (result && Array.isArray(result.trades)) return result;
-    return { trades: [] };
+    const result = await protectedFetch(`${API_BASE}/engine/trades`, {}, []);
+    const all = Array.isArray(result) ? result : (result?.trades || []);
+    if (params.includes('status=open')) {
+      return { trades: all.filter((t) => t.status === 'pending' || t.status === 'executed') };
+    }
+    if (params.includes('status=closed')) {
+      return { trades: all.filter((t) => t.status === 'closed') };
+    }
+    return { trades: all };
   },
 
-  /** Derived from GET /api/trades (no /trades/stats route) */
   getTradeStats: async () => {
-    const profile = await api.getProfile();
     const [openRes, closedRes] = await Promise.all([
       api.getTrades('status=open&limit=100'),
       api.getTrades('status=closed&limit=500'),
     ]);
-    return computeTradeStats(closedRes?.trades, openRes?.trades, profile?.stats);
+    return computeTradeStats(closedRes?.trades, openRes?.trades);
   },
 
-  /** Derived from GET /api/trades (no /trades/equity-curve route) */
   getEquityCurve: async () => {
-    const profile = await api.getProfile();
     const closedRes = await api.getTrades('status=closed&limit=500');
-    const start = profile?.mt5Account?.balance ?? 10000;
-    return buildEquityCurveFromTrades(closedRes?.trades, start);
+    return buildEquityCurveFromTrades(closedRes?.trades, 10000);
   },
 
   // —— Signals ——
@@ -303,8 +297,8 @@ export const api = {
   },
 
   getEngineTrades: async () => {
-    const result = await protectedFetch(`${API_BASE}/engine/trades`, {}, []);
-    return Array.isArray(result) ? result : [];
+    const result = await protectedFetch(`${API_BASE}/engine/trades`, {}, { trades: [] });
+    return Array.isArray(result) ? result : (result?.trades || []);
   },
 
   getEngineRisk: async (userId, profileFromCaller = null, engineStatus = null) => {
