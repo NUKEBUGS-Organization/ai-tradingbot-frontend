@@ -26,7 +26,7 @@ export default function EnginePanel() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 10000);
+    const interval = setInterval(loadData, 15000);
     return () => clearInterval(interval);
   }, [user?._id]);
 
