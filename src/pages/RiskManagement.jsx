@@ -75,9 +75,9 @@ export default function RiskManagement() {
   ];
 
   const riskLevels = [
-    { label: 'Conservative', key: 'conservative', maxRisk: 1, maxDD: 3, maxPos: 3, color: '#3fb950' },
-    { label: 'Moderate', key: 'moderate', maxRisk: 2, maxDD: 5, maxPos: 5, color: '#d4af37' },
-    { label: 'Aggressive', key: 'aggressive', maxRisk: 5, maxDD: 10, maxPos: 10, color: '#f85149' },
+    { label: 'Conservative', key: 'conservative', maxRisk: 1, maxDD: 9, maxPos: 3, color: '#3fb950' },
+    { label: 'Moderate', key: 'moderate', maxRisk: 2, maxDD: 14, maxPos: 5, color: '#d4af37' },
+    { label: 'Aggressive', key: 'aggressive', maxRisk: 5, maxDD: 22, maxPos: 10, color: '#f85149' },
   ];
 
   return (
