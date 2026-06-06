@@ -5,7 +5,7 @@ import ForexChartDashboard from '../components/tradingview/ForexChartDashboard';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
-import { pickMt5LiveAccount, isSimulatedWsAccount, isMockDemoBalance } from '../utils/tradeMetrics';
+import { pickMt5LiveAccount, hasLiveMt5Connection, isSimulatedWsAccount, isMockDemoBalance } from '../utils/tradeMetrics';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, TrendingUp, TrendingDown, Activity, Target, BarChart3, Wifi, WifiOff, Zap, Shield, MessageCircle } from 'lucide-react';
 
@@ -47,6 +47,7 @@ export default function Dashboard() {
 
   const wsAccount = !isSimulatedWsAccount(account) && account?.source === 'mt5' ? account : null;
   const liveMt5 = pickMt5LiveAccount(engineStatus, wsAccount);
+  const mt5Connected = hasLiveMt5Connection(engineStatus, wsAccount);
   const bal =
     liveMt5?.balance != null && Number(liveMt5.balance) > 0 && !isMockDemoBalance(liveMt5.balance)
       ? Number(liveMt5.balance)
@@ -56,7 +57,10 @@ export default function Dashboard() {
       ? Number(liveMt5.equity)
       : null;
   const dailyPnl = liveMt5?.dailyPnl != null ? Number(liveMt5.dailyPnl) : null;
-  const hasLiveMt5Account = bal != null && eq != null;
+  const hasLiveMt5Account = mt5Connected && bal != null && eq != null;
+  const visibleStats = hasLiveMt5Account ? stats : null;
+  const visibleTrades = hasLiveMt5Account ? trades : { open: [], closed: [] };
+  const mt5ConnectText = 'Connect MT5 to load your balance and trades';
   const fmtMoney = (n) =>
     n == null ? '—' : `$${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
@@ -69,6 +73,7 @@ export default function Dashboard() {
       });
 
   const tradeStats = (() => {
+    if (!hasLiveMt5Account) return null;
     const closed = closedTrades || [];
     if (!closed.length) return null;
     const profits = closed.map((t) => t.profit ?? 0);
@@ -97,9 +102,9 @@ export default function Dashboard() {
   })();
 
   const COLORS = ['#3fb950', '#f85149', '#d4af37'];
-  const pieData = stats ? [
-    { name: 'Wins', value: parseFloat(stats.winRate) || 0 },
-    { name: 'Losses', value: 100 - (parseFloat(stats.winRate) || 0) }
+  const pieData = visibleStats ? [
+    { name: 'Wins', value: parseFloat(visibleStats.winRate) || 0 },
+    { name: 'Losses', value: 100 - (parseFloat(visibleStats.winRate) || 0) }
   ] : [];
 
   return (
@@ -117,7 +122,7 @@ export default function Dashboard() {
               </div>
               <div className="stat-card-value">{fmtMoney(bal)}</div>
               <div className={`stat-card-change ${hasLiveMt5Account ? 'up' : ''}`}>
-                {hasLiveMt5Account ? 'MT5 Account' : 'Awaiting MT5 account sync'}
+                {hasLiveMt5Account ? 'MT5 Account' : mt5ConnectText}
               </div>
             </div>
             <div className="stat-card">
@@ -156,24 +161,24 @@ export default function Dashboard() {
                 <span className="stat-card-label">Win Rate</span>
                 <div className="stat-card-icon green"><Target size={16} /></div>
               </div>
-              <div className="stat-card-value">{stats?.winRate || user?.stats?.winRate || 0}%</div>
-              <div className="stat-card-change up">{stats?.totalTrades || 0} trades</div>
+              <div className="stat-card-value">{visibleStats?.winRate ?? '—'}{visibleStats?.winRate != null ? '%' : ''}</div>
+              <div className="stat-card-change up">{hasLiveMt5Account ? `${visibleStats?.totalTrades || 0} trades` : mt5ConnectText}</div>
             </div>
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-label">Profit Factor</span>
                 <div className="stat-card-icon purple"><BarChart3 size={16} /></div>
               </div>
-              <div className="stat-card-value">{stats?.profitFactor || user?.stats?.profitFactor || 0}</div>
-              <div className="stat-card-change up">Ratio</div>
+              <div className="stat-card-value">{visibleStats?.profitFactor ?? '—'}</div>
+              <div className="stat-card-change up">{hasLiveMt5Account ? 'Ratio' : mt5ConnectText}</div>
             </div>
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-label">Max Drawdown</span>
                 <div className="stat-card-icon red"><Shield size={16} /></div>
               </div>
-              <div className="stat-card-value negative">{user?.stats?.maxDrawdown || 0}%</div>
-              <div className="stat-card-change down">Peak to trough</div>
+              <div className="stat-card-value negative">{hasLiveMt5Account ? `${user?.stats?.maxDrawdown || 0}%` : '—'}</div>
+              <div className="stat-card-change down">{hasLiveMt5Account ? 'Peak to trough' : mt5ConnectText}</div>
             </div>
           </div>
 
@@ -201,6 +206,9 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="card-body">
+                {!hasLiveMt5Account ? (
+                  <div className="mt5-empty-state">{mt5ConnectText}</div>
+                ) : (
                 <div className="chart-container">
                   <ResponsiveContainer width="100%" height={280}>
                     <AreaChart data={filteredCurve.length ? filteredCurve : equityCurve}>
@@ -218,7 +226,8 @@ export default function Dashboard() {
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-                {tradeStats && (
+                )}
+                {hasLiveMt5Account && tradeStats && (
                   <div
                     style={{
                       display: 'grid',
@@ -268,11 +277,11 @@ export default function Dashboard() {
                 </ResponsiveContainer>
                 <div style={{ display: 'flex', gap: 24, marginTop: 8 }}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#3fb950', fontFamily: 'var(--font-mono)' }}>{stats?.winRate || 0}%</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#3fb950', fontFamily: 'var(--font-mono)' }}>{visibleStats?.winRate ?? '—'}{visibleStats?.winRate != null ? '%' : ''}</div>
                     <div style={{ fontSize: 10, color: '#545d68' }}>WIN RATE</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#d4af37', fontFamily: 'var(--font-mono)' }}>{stats?.totalTrades || 0}</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#d4af37', fontFamily: 'var(--font-mono)' }}>{visibleStats?.totalTrades ?? '—'}</div>
                     <div style={{ fontSize: 10, color: '#545d68' }}>TOTAL</div>
                   </div>
                 </div>
@@ -284,12 +293,12 @@ export default function Dashboard() {
           <div className="stats-grid dashboard-connection-grid">
             <div className="stat-card" style={{ padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span className={`status-dot ${user?.mt5Account?.connected ? 'online' : 'offline'}`}></span>
+                <span className={`status-dot ${hasLiveMt5Account ? 'online' : 'offline'}`}></span>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600 }}>MT5 Connection</div>
-                  <div style={{ fontSize: 10, color: '#545d68' }}>{user?.mt5Account?.server || 'N/A'} • {user?.mt5Account?.accountId || 'N/A'}</div>
+                  <div style={{ fontSize: 10, color: '#545d68' }}>{hasLiveMt5Account ? 'Live MT5 account synced' : mt5ConnectText}</div>
                 </div>
-                {user?.mt5Account?.connected ? <Wifi size={16} style={{ marginLeft: 'auto', color: '#3fb950' }} /> : <WifiOff size={16} style={{ marginLeft: 'auto', color: '#f85149' }} />}
+                {hasLiveMt5Account ? <Wifi size={16} style={{ marginLeft: 'auto', color: '#3fb950' }} /> : <WifiOff size={16} style={{ marginLeft: 'auto', color: '#f85149' }} />}
               </div>
             </div>
             <div className="stat-card" style={{ padding: 16 }}>
@@ -319,7 +328,7 @@ export default function Dashboard() {
             <div className="card-header">
               <span className="card-title"><BarChart3 size={16} /> Positions</span>
               <div className="tabs" style={{ margin: 0, width: 'auto' }}>
-                <button className={`tab ${tab === 'open' ? 'active' : ''}`} onClick={() => setTab('open')}>Open ({trades?.open?.length || 0})</button>
+                <button className={`tab ${tab === 'open' ? 'active' : ''}`} onClick={() => setTab('open')}>Open ({visibleTrades?.open?.length || 0})</button>
                 <button className={`tab ${tab === 'closed' ? 'active' : ''}`} onClick={() => setTab('closed')}>History</button>
               </div>
             </div>
@@ -334,7 +343,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(trades?.[tab] || []).map(t => (
+                    {(visibleTrades?.[tab] || []).map(t => (
                       <tr key={t._id}>
                         <td style={{ color: '#8b949e' }}>{t.ticket || t._id?.slice(-6)}</td>
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{t.symbol}</td>
@@ -350,8 +359,8 @@ export default function Dashboard() {
                         <td><span className="badge badge-gold">{t.amdPhase || t.grade || 'AMD'}</span></td>
                       </tr>
                     ))}
-                    {(trades?.[tab] || []).length === 0 && (
-                      <tr><td colSpan={tab === 'closed' ? 10 : 9} style={{ textAlign: 'center', padding: 40, color: '#545d68' }}>No positions found</td></tr>
+                    {(visibleTrades?.[tab] || []).length === 0 && (
+                      <tr><td colSpan={tab === 'closed' ? 10 : 9} style={{ textAlign: 'center', padding: 40, color: '#545d68' }}>{hasLiveMt5Account ? 'No positions found' : mt5ConnectText}</td></tr>
                     )}
                   </tbody>
                 </table>

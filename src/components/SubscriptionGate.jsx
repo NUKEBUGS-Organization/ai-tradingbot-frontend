@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { hasActiveSubscription } from '../utils/subscription';
+import { hasActiveSubscription, hasSignalPreviewAccess } from '../utils/subscription';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import api from '../services/api';
@@ -9,6 +9,8 @@ import { Lock, Check, X, Zap, Shield, CreditCard } from 'lucide-react';
 
 export default function SubscriptionGate({ children, title = 'Dashboard' }) {
   const { user } = useAuth();
+  const signalPreviewPage = ['AI Signals', 'Signal History'].includes(title);
+  if (signalPreviewPage && hasSignalPreviewAccess(user)) return children;
   if (hasActiveSubscription(user)) return children;
   return <SubscriptionRequired title={title} user={user} />;
 }

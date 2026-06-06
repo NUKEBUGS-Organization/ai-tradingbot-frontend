@@ -130,24 +130,23 @@ export function pickMt5LiveAccount(engineStatus, wsAccount) {
     if (fromWs && (fromWs.balance > 0 || fromWs.equity > 0)) return fromWs;
   }
 
-  const risk = engineStatus?.engine?.risk;
-  if (risk?.balance != null && risk.balance > 0) {
-    return normalizeLiveAccount({
-      balance: risk.balance,
-      equity: risk.balance,
-      daily_pnl: risk.daily_pnl,
-      open_positions: risk.open_positions,
-    });
-  }
   return null;
+}
+
+export function hasLiveMt5Connection(engineStatus, wsAccount) {
+  const bridgeConnected = Boolean(engineStatus?.mt5_bridge?.connected);
+  const liveAccount = pickMt5LiveAccount(engineStatus, wsAccount);
+  const prices = engineStatus?.mt5_prices || {};
+  const hasLivePrice = Object.values(prices).some((quote) => quote?.live && Number(quote.bid) > 0);
+  return bridgeConnected && (Boolean(liveAccount) || hasLivePrice);
 }
 
 export function mapRiskSettingsForUi(riskSettings, profile, liveAccount = null) {
   const rs = riskSettings || {};
   const maxRisk = rs.maxRiskPerTrade ?? 2;
   const live = liveAccount || {};
-  const balance = live.balance ?? profile?.mt5Account?.balance ?? 0;
-  const equity = live.equity ?? profile?.mt5Account?.equity ?? balance;
+  const balance = live.balance ?? 0;
+  const equity = live.equity ?? balance;
   const dailyPnl =
     live.dailyPnl ??
     live.daily_pnl ??

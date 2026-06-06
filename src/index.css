@@ -604,6 +604,43 @@ tr:hover td { background: rgba(255,255,255,0.015); }
   transform: none;
 }
 
+.masked-signal-value {
+  display: inline-flex;
+  align-items: center;
+  min-width: 64px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: transparent;
+  user-select: none;
+  background:
+    linear-gradient(90deg, rgba(212, 175, 55, 0.18), rgba(88, 166, 255, 0.12)),
+    repeating-linear-gradient(90deg, rgba(230, 237, 243, 0.32) 0 6px, rgba(230, 237, 243, 0.12) 6px 12px);
+  filter: blur(0.25px);
+  border: 1px solid rgba(212, 175, 55, 0.16);
+}
+
+.masked-signal-value::after {
+  content: 'Locked';
+  color: #d4af37;
+  filter: none;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mt5-empty-state {
+  padding: 18px;
+  color: var(--text-secondary);
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* ========== SIGNAL & STATUS INDICATORS ========== */
 .status-dot {
   width: 8px; height: 8px; border-radius: 50%; display: inline-block;

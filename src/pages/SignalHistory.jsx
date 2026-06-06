@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import SignalDetailModal from '../components/SignalDetailModal';
 import { GradeBadge, SessionBadge, AmdPhaseBadge, H4BiasIndicator } from '../components/signalBadges';
+import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalValue';
 import api from '../services/api';
 import { History, Filter } from 'lucide-react';
 
@@ -146,11 +147,11 @@ export default function SignalHistory() {
                         <td>
                           <span className={`badge ${s.direction === 'BUY' ? 'badge-green' : 'badge-red'}`}>{s.direction}</span>
                         </td>
-                        <td>{s.entryPrice ?? '—'}</td>
-                        <td style={{ color: '#f85149' }}>{s.stopLoss ?? '—'}</td>
-                        <td style={{ color: '#3fb950' }}>{s.takeProfit ?? '—'}</td>
-                        <td>{s.confidence}%</td>
-                        <td><GradeBadge grade={s.grade} /></td>
+                        <td><MaskedSignalValue signal={s} value={s.entryPrice} /></td>
+                        <td style={{ color: '#f85149' }}><MaskedSignalValue signal={s} value={s.stopLoss} color="#f85149" /></td>
+                        <td style={{ color: '#3fb950' }}><MaskedSignalValue signal={s} value={s.takeProfit} color="#3fb950" /></td>
+                        <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.confidence} /> : `${s.confidence}%`}</td>
+                        <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.grade} /> : <GradeBadge grade={s.grade} />}</td>
                         <td><SessionBadge session={s.session} /></td>
                         <td><span className="badge badge-gold">{s.status}</span></td>
                         <td style={{ fontSize: 11, color: '#8b949e' }}>

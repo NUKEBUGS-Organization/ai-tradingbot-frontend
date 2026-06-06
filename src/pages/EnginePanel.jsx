@@ -3,9 +3,10 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { normalizeSignalsList, pickMt5LiveAccount, mapRiskSettingsForUi } from '../utils/tradeMetrics';
+import { normalizeSignalsList, pickMt5LiveAccount, hasLiveMt5Connection, mapRiskSettingsForUi } from '../utils/tradeMetrics';
 import { useWebSocket } from '../services/websocket';
 import { Cpu, Activity, Wifi, WifiOff, Zap, Shield, RefreshCw, AlertTriangle, Play, BarChart3 } from 'lucide-react';
+import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalValue';
 
 const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'GBPJPY', 'XTIUSD'];
 
@@ -85,6 +86,8 @@ export default function EnginePanel() {
   };
 
   const isConnected = engineStatus?.connected || engineStatus?.engine?.is_running;
+  const mt5Connected = hasLiveMt5Connection(engineStatus, wsAccount);
+  const mt5ConnectText = 'Connect MT5 to load your balance and trades';
 
   const toggleAutoTrade = async () => {
     const next = !autoTrade.enabled;
@@ -118,7 +121,7 @@ export default function EnginePanel() {
               AI signals are sent to the EA for live execution. Enable{' '}
               <strong style={{ color: '#d4af37' }}>Auto Execute Signals</strong> on the MT5 EA and{' '}
               <strong style={{ color: '#d4af37' }}>Algo Trading</strong> in the MT5 toolbar. Bridge{' '}
-              {autoTrade.mt5_connected || engineStatus?.mt5_bridge?.connected ? (
+              {mt5Connected ? (
                 <span style={{ color: '#3fb950' }}>connected</span>
               ) : (
                 <span style={{ color: '#f85149' }}>disconnected</span>
@@ -138,12 +141,12 @@ export default function EnginePanel() {
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-label">MT5 Bridge</span>
-                <div className={`stat-card-icon ${engineStatus?.mt5_bridge?.connected ? 'green' : 'red'}`}>
-                  {engineStatus?.mt5_bridge?.connected ? <Wifi size={16} /> : <WifiOff size={16} />}
+                <div className={`stat-card-icon ${mt5Connected ? 'green' : 'red'}`}>
+                  {mt5Connected ? <Wifi size={16} /> : <WifiOff size={16} />}
                 </div>
               </div>
-              <div className="stat-card-value" style={{ fontSize: 16 }}>{engineStatus?.mt5_bridge?.connected ? '🟢 Connected' : '🔴 Disconnected'}</div>
-              <div className="stat-card-change">Port {engineStatus?.mt5_bridge?.port || 15555}</div>
+              <div className="stat-card-value" style={{ fontSize: 16 }}>{mt5Connected ? 'Connected' : 'Disconnected'}</div>
+              <div className="stat-card-change">{mt5Connected ? `Port ${engineStatus?.mt5_bridge?.port || 15555}` : mt5ConnectText}</div>
             </div>
             <div className="stat-card">
               <div className="stat-card-header">
@@ -260,15 +263,15 @@ export default function EnginePanel() {
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>Direction:</span> <strong style={{ color: analysis.signal.type === 'BUY' ? '#3fb950' : '#f85149' }}>{analysis.signal.type}</strong></div>
                           <div>
                             <span style={{ color: '#545d68', fontSize: 11 }}>Entry:</span>{' '}
-                            <strong>{analysis.signal.entry}</strong>
-                            {analysis.signal.price_source === 'mt5_live' && (
+                            <strong><MaskedSignalValue signal={analysis.signal} value={analysis.signal.entry} /></strong>
+                            {!isSignalMasked(analysis.signal) && analysis.signal.price_source === 'mt5_live' && (
                               <span className="badge badge-gold" style={{ marginLeft: 6, fontSize: 9 }}>MT5 LIVE</span>
                             )}
                           </div>
-                          <div><span style={{ color: '#545d68', fontSize: 11 }}>SL:</span> <strong style={{ color: '#f85149' }}>{analysis.signal.sl}</strong></div>
-                          <div><span style={{ color: '#545d68', fontSize: 11 }}>TP:</span> <strong style={{ color: '#3fb950' }}>{analysis.signal.tp}</strong></div>
-                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Lot Size:</span> <strong>{analysis.signal.lot_size}</strong></div>
-                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Risk:</span> <strong>{analysis.signal.risk_percent}%</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>SL:</span> <strong><MaskedSignalValue signal={analysis.signal} value={analysis.signal.sl} color="#f85149" /></strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>TP:</span> <strong><MaskedSignalValue signal={analysis.signal} value={analysis.signal.tp} color="#3fb950" /></strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Lot Size:</span> <strong><MaskedSignalValue signal={analysis.signal} value={analysis.signal.lot_size} /></strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Risk:</span> <strong><MaskedSignalValue signal={analysis.signal} value={analysis.signal.risk_percent != null ? `${analysis.signal.risk_percent}%` : null} /></strong></div>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>Session:</span> <strong>{analysis.signal.session}</strong></div>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>AMD Phase:</span> <strong>{analysis.signal.amd_phase || '-'}</strong></div>
                         </div>
@@ -449,14 +452,14 @@ export default function EnginePanel() {
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{sig.symbol}</td>
                         <td><span className={`badge ${sig.direction === 'BUY' ? 'badge-green' : 'badge-red'}`}>{sig.direction}</span></td>
                         <td>
-                          {sig.entryPrice ?? sig.entry ?? '-'}
-                          {(sig.priceSource === 'mt5_live' || sig.price_source === 'mt5_live') && (
+                          <MaskedSignalValue signal={sig} value={sig.entryPrice ?? sig.entry} />
+                          {!isSignalMasked(sig) && (sig.priceSource === 'mt5_live' || sig.price_source === 'mt5_live') && (
                             <span className="badge badge-gold" style={{ marginLeft: 6, fontSize: 9 }}>LIVE</span>
                           )}
                         </td>
-                        <td style={{ color: '#f85149' }}>{sig.stopLoss ?? sig.sl ?? '-'}</td>
-                        <td style={{ color: '#3fb950' }}>{sig.takeProfit ?? sig.tp ?? '-'}</td>
-                        <td><span className={`badge ${sig.confidence >= 80 ? 'badge-green' : sig.confidence >= 60 ? 'badge-gold' : 'badge-red'}`}>{sig.confidence}%</span></td>
+                        <td style={{ color: '#f85149' }}><MaskedSignalValue signal={sig} value={sig.stopLoss ?? sig.sl} color="#f85149" /></td>
+                        <td style={{ color: '#3fb950' }}><MaskedSignalValue signal={sig} value={sig.takeProfit ?? sig.tp} color="#3fb950" /></td>
+                        <td>{isSignalMasked(sig) ? <MaskedSignalValue signal={sig} value={sig.confidence} /> : <span className={`badge ${sig.confidence >= 80 ? 'badge-green' : sig.confidence >= 60 ? 'badge-gold' : 'badge-red'}`}>{sig.confidence}%</span>}</td>
                         <td>{sig.strategy || '-'}</td>
                         <td>{sig.session || '-'}</td>
                         <td><span className={`badge ${sig.status === 'active' ? 'badge-green' : 'badge-gold'}`}>{sig.status || 'pending'}</span></td>

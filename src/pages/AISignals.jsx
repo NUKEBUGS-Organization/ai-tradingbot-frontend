@@ -7,6 +7,7 @@ import { Brain, TrendingUp, TrendingDown, Minus, Activity, Gauge, Clock, BarChar
 import SignalDetailModal from '../components/SignalDetailModal';
 import { GradeBadge, SessionBadge, AmdPhaseBadge, H4BiasIndicator, RiskBadge } from '../components/signalBadges';
 import { displayProductName } from '../utils/product';
+import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalValue';
 
 export default function AISignals() {
   const { signals: liveSignals } = useWebSocket();
@@ -45,7 +46,7 @@ export default function AISignals() {
   const volColor = { low: '#3fb950', medium: '#d4af37', high: '#f0883e', extreme: '#f85149' };
   const dirIcon = { BUY: <TrendingUp size={14} />, SELL: <TrendingDown size={14} />, NEUTRAL: <Minus size={14} /> };
 
-  const validSignals = signals.filter((s) => s.symbol && s.entry && s.entry !== 0);
+  const validSignals = signals.filter((s) => s.symbol && s.direction);
 
   return (
     <div className="app-layout">
@@ -126,9 +127,9 @@ export default function AISignals() {
                       <span style={{ fontSize: 10, color: '#545d68' }}>{displayProductName(s.strategy)}</span>
                     </div>
                     <div style={{ display: 'flex', gap: 16, fontSize: 11, color: '#8b949e', fontFamily: 'var(--font-mono)' }}>
-                      <span>Entry: {s.entryPrice}</span>
-                      <span>Conf: {s.confidence}%</span>
-                      <span>Quality: {s.qualityScore}</span>
+                      <span>Entry: <MaskedSignalValue signal={s} value={s.entryPrice} /></span>
+                      <span>Conf: {isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.confidence} /> : `${s.confidence}%`}</span>
+                      <span>Quality: {isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.qualityScore} /> : s.qualityScore}</span>
                     </div>
                   </div>
                 )) : (
@@ -176,26 +177,30 @@ export default function AISignals() {
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{s.symbol}</td>
                         <td><span className={`badge ${s.direction === 'BUY' ? 'badge-green' : s.direction === 'SELL' ? 'badge-red' : 'badge-blue'}`}>{s.direction}</span></td>
                         <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>
-                          {s.entryPrice ?? s.entry ?? '—'}
-                          {(s.priceSource === 'mt5_live' || s.price_source === 'mt5_live') && (
+                          <MaskedSignalValue signal={s} value={s.entryPrice ?? s.entry} />
+                          {!isSignalMasked(s) && (s.priceSource === 'mt5_live' || s.price_source === 'mt5_live') && (
                             <span className="badge badge-gold" style={{ marginLeft: 4, fontSize: 9 }}>LIVE</span>
                           )}
                         </td>
-                        <td style={{ color: '#f85149', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.stopLoss ?? s.sl ?? '—'}</td>
-                        <td style={{ color: '#3fb950', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.takeProfit ?? s.tp ?? '—'}</td>
+                        <td style={{ color: '#f85149', fontFamily: 'var(--font-mono)', fontSize: 11 }}><MaskedSignalValue signal={s} value={s.stopLoss ?? s.sl} color="#f85149" /></td>
+                        <td style={{ color: '#3fb950', fontFamily: 'var(--font-mono)', fontSize: 11 }}><MaskedSignalValue signal={s} value={s.takeProfit ?? s.tp} color="#3fb950" /></td>
                         <td>
+                          {isSignalMasked(s) ? (
+                            <MaskedSignalValue signal={s} value={s.confidence} />
+                          ) : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div className="signal-bar" style={{ flex: 1, height: 4, minWidth: 40 }}>
                               <div className="signal-bar-fill" style={{ width: `${s.confidence}%`, background: s.confidence >= 85 ? '#d4af37' : s.confidence > 70 ? '#3fb950' : s.confidence > 50 ? '#d4af37' : '#f85149' }} />
                             </div>
                             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{s.confidence}%</span>
                           </div>
+                          )}
                         </td>
-                        <td><GradeBadge grade={s.grade || (s.confidence >= 85 ? 'A+' : s.confidence >= 75 ? 'A' : 'B')} /></td>
+                        <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.grade} /> : <GradeBadge grade={s.grade || (s.confidence >= 85 ? 'A+' : s.confidence >= 75 ? 'A' : 'B')} />}</td>
                         <td><AmdPhaseBadge phase={s.amdPhase || s.amd_phase} /></td>
                         <td><H4BiasIndicator bias={s.marketBias || s.h4Bias} /></td>
                         <td><SessionBadge session={s.session} /></td>
-                        <td><RiskBadge level={s.riskLevel || s.risk_level} /></td>
+                        <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.riskLevel || s.risk_level} /> : <RiskBadge level={s.riskLevel || s.risk_level} />}</td>
                         <td style={{ fontSize: 11, color: '#8b949e', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {s.reason || displayProductName(s.strategy) || '—'}
                         </td>

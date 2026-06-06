@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import MaskedSignalValue, { isSignalMasked } from './MaskedSignalValue';
 
 const gradeColor = { 'A+': '#d4af37', A: '#3fb950', B: '#58a6ff', C: '#8b949e', F: '#f85149' };
 const sessionColor = { london: '#58a6ff', newyork: '#3fb950', overlap: '#d4af37', asian: '#8b949e' };
@@ -62,18 +63,25 @@ export default function SignalDetailModal({ signal, onClose }) {
               value: signal.direction,
               color: signal.direction === 'BUY' ? '#3fb950' : '#f85149',
             },
-            { label: 'Entry', value: signal.entryPrice ?? signal.entry },
-            { label: 'Stop Loss', value: signal.stopLoss ?? signal.sl, color: '#f85149' },
-            { label: 'Take Profit', value: signal.takeProfit ?? signal.tp, color: '#3fb950' },
+            { label: 'Entry', value: signal.entryPrice ?? signal.entry, sensitive: true },
+            { label: 'Stop Loss', value: signal.stopLoss ?? signal.sl, color: '#f85149', sensitive: true },
+            { label: 'Take Profit', value: signal.takeProfit ?? signal.tp, color: '#3fb950', sensitive: true },
             {
               label: 'Confidence',
               value: `${signal.confidence}%`,
               color: signal.confidence >= 85 ? '#d4af37' : '#3fb950',
+              sensitive: true,
             },
           ].map((item, i) => (
             <div key={i} style={{ background: '#0d1117', borderRadius: 8, padding: 12 }}>
               <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>{item.label}</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: item.color || '#e6edf3' }}>{item.value}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: item.color || '#e6edf3' }}>
+                {item.sensitive && isSignalMasked(signal) ? (
+                  <MaskedSignalValue signal={signal} value={item.value} color={item.color} />
+                ) : (
+                  item.value
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -85,7 +93,7 @@ export default function SignalDetailModal({ signal, onClose }) {
         )}
 
         <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {signal.grade && (
+          {signal.grade && !isSignalMasked(signal) && (
             <span
               style={{
                 background: `${gradeColor[signal.grade] || '#8b949e'}22`,
@@ -130,7 +138,7 @@ export default function SignalDetailModal({ signal, onClose }) {
               AMD: {amdPhase}
             </span>
           )}
-          {signal.riskLevel && (
+          {signal.riskLevel && !isSignalMasked(signal) && (
             <span
               style={{
                 background:
