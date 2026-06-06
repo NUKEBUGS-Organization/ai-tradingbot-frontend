@@ -6,6 +6,8 @@ const AuthContext = createContext(null);
 const TOKEN_KEY = 'aurumx_token';
 const USER_KEY = 'aurumx_user';
 const REMEMBER_KEY = 'aurumx_remember';
+const TOUR_LOGIN_PREFIX = 'aurumx_tour_login_count_';
+const TOUR_PENDING_KEY = 'aurumx_tour_pending';
 
 const mockAdmin = {
   _id: 'admin123',
@@ -45,6 +47,31 @@ function resolveMockUser(token) {
   if (token === 'mock-admin-token') return mockAdmin;
   if (token === 'mock-user-token') return mockUser;
   return null;
+}
+
+function getTourUserKey(user) {
+  return user?._id || user?.email || 'guest';
+}
+
+function markTourEligibleLogin(user) {
+  const userKey = getTourUserKey(user);
+  try {
+    const countKey = `${TOUR_LOGIN_PREFIX}${userKey}`;
+    const currentCount = Number(localStorage.getItem(countKey) || 0);
+    const nextCount = currentCount + 1;
+    localStorage.setItem(countKey, String(nextCount));
+
+    if (nextCount <= 3) {
+      sessionStorage.setItem(TOUR_PENDING_KEY, JSON.stringify({
+        userKey,
+        loginCount: nextCount,
+      }));
+    } else {
+      sessionStorage.removeItem(TOUR_PENDING_KEY);
+    }
+  } catch {
+    /* ignore storage failures */
+  }
 }
 
 export const useAuth = () => useContext(AuthContext);
@@ -118,6 +145,7 @@ export function AuthProvider({ children }) {
     const data = await api.login(email, password);
     if (!data?.token) throw new Error('Invalid email or password');
     persistSession(data.token, data, remember);
+    markTourEligibleLogin(data);
     setToken(data.token);
     setUser(data);
     return data;

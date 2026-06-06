@@ -22,6 +22,7 @@ import ReferralDashboard from './pages/ReferralDashboard';
 import AdminReferrals from './pages/AdminReferrals';
 import SubscriptionGate from './components/SubscriptionGate';
 import RiskDisclosureGate from './components/RiskDisclosureGate';
+import AppTour from './components/AppTour';
 
 function LoadingScreen() {
   return (
@@ -105,6 +106,7 @@ function App() {
           <Route path="/admin/referrals" element={<ProtectedRoute adminOnly><AdminReferrals /></ProtectedRoute>} />
           <Route path="/" element={<HomeRedirect />} />
         </Routes>
+        <AppTour />
       </Router>
       </SidebarProvider>
       </RiskDisclosureGate>

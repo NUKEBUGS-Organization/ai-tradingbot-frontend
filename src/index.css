@@ -486,6 +486,124 @@ tr:hover td { background: rgba(255,255,255,0.015); }
   font-size: 12px; margin-bottom: 16px; text-align: center;
 }
 
+/* ========== APP TOUR ========== */
+.app-tour-shell {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1500;
+  width: min(380px, calc(100vw - 32px));
+  background: rgba(22, 27, 34, 0.96);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  padding: 18px;
+  animation: fadeIn 0.25s ease forwards;
+}
+
+.app-tour-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.app-tour-close:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.app-tour-kicker {
+  margin-bottom: 12px;
+  padding-right: 34px;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.app-tour-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.app-tour-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.app-tour-title {
+  font-size: 15px;
+  line-height: 1.25;
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.app-tour-progress {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.app-tour-body {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+.app-tour-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.app-tour-dot {
+  width: 22px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-primary);
+}
+
+.app-tour-dot.active {
+  background: var(--gold);
+}
+
+.app-tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.app-tour-actions .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* ========== SIGNAL & STATUS INDICATORS ========== */
 .status-dot {
   width: 8px; height: 8px; border-radius: 50%; display: inline-block;
@@ -626,6 +744,19 @@ tr:hover td { background: rgba(255,255,255,0.015); }
 
   .btn-group {
     flex-wrap: wrap;
+  }
+
+  .app-tour-shell {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    padding: 16px;
+  }
+
+  .app-tour-actions .btn {
+    width: auto;
+    flex: 1 1 calc(50% - 8px);
   }
 }
 
