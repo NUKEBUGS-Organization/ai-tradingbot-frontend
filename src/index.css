@@ -489,8 +489,9 @@ tr:hover td { background: rgba(255,255,255,0.015); }
 /* ========== APP TOUR ========== */
 .app-tour-shell {
   position: fixed;
+  top: 72px;
   right: 24px;
-  bottom: 24px;
+  bottom: auto;
   z-index: 1500;
   width: min(380px, calc(100vw - 32px));
   background: rgba(22, 27, 34, 0.96);
@@ -784,10 +785,11 @@ tr:hover td { background: rgba(255,255,255,0.015); }
   }
 
   .app-tour-shell {
-    left: 12px;
+    top: 68px;
     right: 12px;
-    bottom: 12px;
-    width: auto;
+    left: auto;
+    bottom: auto;
+    width: min(380px, calc(100vw - 24px));
     padding: 16px;
   }
 
