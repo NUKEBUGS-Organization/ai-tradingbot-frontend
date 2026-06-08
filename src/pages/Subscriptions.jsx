@@ -8,8 +8,9 @@ const plans = [
   {
     id: 'discovery',
     name: 'VCL4X DISCOVERY',
-    price: 99,
-    interval: 'month',
+    monthlyPrice: 99,
+    annualPrice: 79,
+    annualTotal: 948,
     badge: '5-Day Free Trial',
     badgeColor: '#3fb950',
     description: 'Learn How the AI Thinks Before You Risk More Capital',
@@ -32,8 +33,9 @@ const plans = [
   {
     id: 'pro',
     name: 'VCL4X PRO',
-    price: 149,
-    interval: 'month',
+    monthlyPrice: 149,
+    annualPrice: 119,
+    annualTotal: 1428,
     badge: '⭐ MOST POPULAR',
     badgeColor: '#d4af37',
     description: 'Everything You Need To Trade With Confidence',
@@ -56,8 +58,9 @@ const plans = [
   {
     id: 'elite',
     name: 'VCL4X ELITE',
-    price: 199,
-    interval: 'month',
+    monthlyPrice: 199,
+    annualPrice: 159,
+    annualTotal: 1908,
     badge: '🔥 PROFESSIONAL',
     badgeColor: '#f0883e',
     description: 'Built For Traders Who Want Every Possible Advantage',
@@ -137,6 +140,7 @@ const upgradeSteps = [
 ];
 
 export default function Subscriptions() {
+  const [isAnnual, setIsAnnual] = useState(false);
   const [mySub, setMySub] = useState(null);
 
   useEffect(() => { loadData(); }, []);
@@ -193,6 +197,38 @@ export default function Subscriptions() {
           <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, color: '#e6edf3' }}>Subscription Plans</h2>
           <p style={{ fontSize: 14, color: '#8b949e', marginBottom: 24 }}>Choose the plan that fits your trading journey.</p>
 
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 32 }}>
+            <span style={{ color: !isAnnual ? '#d4af37' : '#8b949e', fontWeight: !isAnnual ? 700 : 400, fontSize: 15 }}>Monthly</span>
+            <div
+              onClick={() => setIsAnnual(!isAnnual)}
+              role="button"
+              tabIndex={0}
+              aria-label="Toggle annual pricing"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsAnnual(!isAnnual); }}
+              style={{
+                width: 52, height: 28, borderRadius: 14,
+                background: isAnnual ? '#d4af37' : '#30363d',
+                cursor: 'pointer', position: 'relative', transition: 'background 0.3s',
+              }}
+            >
+              <div style={{
+                width: 22, height: 22, borderRadius: '50%', background: 'white',
+                position: 'absolute', top: 3,
+                left: isAnnual ? 27 : 3,
+                transition: 'left 0.3s',
+              }} />
+            </div>
+            <span style={{ color: isAnnual ? '#d4af37' : '#8b949e', fontWeight: isAnnual ? 700 : 400, fontSize: 15 }}>
+              Annual{' '}
+              <span style={{
+                background: 'rgba(63,185,80,0.2)', color: '#3fb950',
+                padding: '2px 8px', borderRadius: 20, fontSize: 12, marginLeft: 6,
+              }}>
+                Save 20%
+              </span>
+            </span>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 40 }}>
             {plans.map((p) => {
               const isActive = mySub?.plan === p.id;
@@ -229,8 +265,19 @@ export default function Subscriptions() {
                     <p style={{ fontSize: 13, color: '#8b949e', lineHeight: 1.5, minHeight: 40 }}>{p.description}</p>
 
                     <div style={{ margin: '20px 0' }}>
-                      <span style={{ fontSize: 36, fontWeight: 800, fontFamily: 'var(--font-mono)', color: '#d4af37' }}>${p.price}</span>
-                      <span style={{ fontSize: 12, color: '#8b949e' }}>/{p.interval}</span>
+                      <div style={{ fontSize: 36, fontWeight: 800, fontFamily: 'var(--font-mono)', color: '#d4af37' }}>
+                        ${isAnnual ? p.annualPrice : p.monthlyPrice}
+                        <span style={{ fontSize: 14, color: '#8b949e', fontWeight: 400 }}>/mo</span>
+                      </div>
+                      {isAnnual ? (
+                        <div style={{ fontSize: 12, color: '#3fb950', marginTop: 4 }}>
+                          Billed ${p.annualTotal}/year
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 12, color: '#8b949e', marginTop: 4 }}>
+                          Billed monthly
+                        </div>
+                      )}
                     </div>
 
                     <ul style={{ textAlign: 'left', marginBottom: 20, fontSize: 13, flex: 1, listStyle: 'none', padding: 0 }}>
