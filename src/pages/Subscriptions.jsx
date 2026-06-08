@@ -86,12 +86,14 @@ const licenses = [
   {
     id: 'personal',
     name: 'PERSONAL LICENSE',
-    price: 2300,
+    regularPrice: 2300,
+    annualPrice: 1725,
     interval: '6 months',
-    accounts: '1 MT5 Account',
     features: [
       'AI Auto Execution',
       'Signal Synchronization',
+      'Advanced Automation',
+      'Dynamic Risk Controls',
       'VPS Compatible',
       'Real-Time Trade Management',
     ],
@@ -99,29 +101,33 @@ const licenses = [
   {
     id: 'professional',
     name: 'PROFESSIONAL LICENSE',
-    price: 2999,
+    regularPrice: 2999,
+    annualPrice: 2249,
     interval: '6 months',
-    accounts: 'Up to 3 MT5 Accounts',
     highlighted: true,
     features: [
       'Everything in Personal',
-      'Multi-Account Access',
-      'Advanced Automation',
+      'Expanded Market Coverage',
+      'Institutional Risk Management',
+      'Portfolio Protection',
+      'Advanced Analytics',
       'Priority Support',
     ],
   },
   {
     id: 'elite_license',
     name: 'ELITE LICENSE',
-    price: 3699,
+    regularPrice: 3699,
+    annualPrice: 2774,
     interval: '6 months',
-    accounts: 'Up to 10 MT5 Accounts',
     badge: '🔥 Built for serious traders and teams',
     features: [
       'Everything in Professional',
-      'Advanced License Controls',
+      'AI Trade Quality Scoring',
+      'Premium AI Features',
+      'Advanced Risk Controls',
+      'VIP Support',
       'Team Management',
-      'Premium Support',
     ],
   },
 ];
@@ -141,6 +147,7 @@ const upgradeSteps = [
 
 export default function Subscriptions() {
   const [isAnnual, setIsAnnual] = useState(false);
+  const [isAnnualLicense, setIsAnnualLicense] = useState(false);
   const [mySub, setMySub] = useState(null);
 
   useEffect(() => { loadData(); }, []);
@@ -371,6 +378,38 @@ export default function Subscriptions() {
             Your subscription gives you access to the ecosystem. Your license unlocks automation.
           </p>
 
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 32 }}>
+            <span style={{ color: !isAnnualLicense ? '#d4af37' : '#8b949e', fontWeight: !isAnnualLicense ? 700 : 400, fontSize: 15 }}>Standard</span>
+            <div
+              onClick={() => setIsAnnualLicense(!isAnnualLicense)}
+              role="button"
+              tabIndex={0}
+              aria-label="Toggle annual license pricing"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsAnnualLicense(!isAnnualLicense); }}
+              style={{
+                width: 52, height: 28, borderRadius: 14,
+                background: isAnnualLicense ? '#d4af37' : '#30363d',
+                cursor: 'pointer', position: 'relative', transition: 'background 0.3s',
+              }}
+            >
+              <div style={{
+                width: 22, height: 22, borderRadius: '50%', background: 'white',
+                position: 'absolute', top: 3,
+                left: isAnnualLicense ? 27 : 3,
+                transition: 'left 0.3s',
+              }} />
+            </div>
+            <span style={{ color: isAnnualLicense ? '#d4af37' : '#8b949e', fontWeight: isAnnualLicense ? 700 : 400, fontSize: 15 }}>
+              Annual Renewal{' '}
+              <span style={{
+                background: 'rgba(63,185,80,0.2)', color: '#3fb950',
+                padding: '2px 8px', borderRadius: 20, fontSize: 12, marginLeft: 6,
+              }}>
+                Save 25%
+              </span>
+            </span>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
             {licenses.map((license) => (
               <div
@@ -391,13 +430,14 @@ export default function Subscriptions() {
                   <h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: '0.04em', marginBottom: 12, color: '#e6edf3' }}>{license.name}</h3>
                   <div style={{ marginBottom: 16 }}>
                     <span style={{ fontSize: 32, fontWeight: 800, fontFamily: 'var(--font-mono)', color: '#d4af37' }}>
-                      ${license.price.toLocaleString()}
+                      ${(isAnnualLicense ? license.annualPrice : license.regularPrice).toLocaleString()}
                     </span>
                     <span style={{ fontSize: 12, color: '#8b949e' }}> / {license.interval}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontSize: 13, color: '#e6edf3' }}>
-                    <Check size={16} style={{ color: '#3fb950', flexShrink: 0 }} />
-                    {license.accounts}
+                    {isAnnualLicense && (
+                      <div style={{ fontSize: 12, color: '#3fb950', marginTop: 4 }}>
+                        Save 25% on renewal
+                      </div>
+                    )}
                   </div>
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', flex: 1 }}>
                     {license.features.map((f) => (
