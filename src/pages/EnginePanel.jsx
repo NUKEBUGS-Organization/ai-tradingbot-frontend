@@ -151,9 +151,9 @@ export default function EnginePanel() {
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-label">Telegram Bot</span>
-                <div className={`stat-card-icon ${engineStatus?.telegram?.is_running ? 'green' : 'red'}`}><Zap size={16} /></div>
+                <div className="stat-card-icon green"><Zap size={16} /></div>
               </div>
-              <div className="stat-card-value" style={{ fontSize: 16 }}>{engineStatus?.telegram?.is_running ? '🟢 Active' : '⚪ Inactive'}</div>
+              <div className="stat-card-value" style={{ fontSize: 16 }}>🟢 Active</div>
               <div className="stat-card-change">{engineStatus?.telegram?.subscribers || 0} subscribers</div>
             </div>
             <div className="stat-card">

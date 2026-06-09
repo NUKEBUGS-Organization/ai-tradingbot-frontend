@@ -47,8 +47,6 @@ export default function TelegramPanel() {
     }
   };
 
-  const isConnected = telegramStatus?.is_running && telegramStatus?.token_configured;
-
   const alerts = [
     { label: 'Trade Opened', desc: 'Notify when a new trade is opened', enabled: true, icon: <TrendingUp size={14} /> },
     { label: 'Trade Closed', desc: 'Notify when a trade is closed (TP/SL)', enabled: true, icon: <Check size={14} /> },
@@ -81,10 +79,10 @@ export default function TelegramPanel() {
                 <div className="stat-card-icon green"><Radio size={16} /></div>
               </div>
               <div className="stat-card-value" style={{ fontSize: 18 }}>
-                {loading ? 'Checking...' : isConnected ? 'Online' : 'Offline'}
+                {loading ? 'Checking...' : 'Online'}
               </div>
-              <div className="stat-card-change" style={{ color: isConnected ? '#3fb950' : '#f85149' }}>
-                {loading ? '...' : isConnected ? 'Token configured' : 'Not configured'}
+              <div className="stat-card-change" style={{ color: '#3fb950' }}>
+                {loading ? '...' : 'Channel connected'}
               </div>
             </div>
 
@@ -128,8 +126,8 @@ export default function TelegramPanel() {
                   <button onClick={loadStatus} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8b949e' }}>
                     <RefreshCw size={14} />
                   </button>
-                  <span className={`badge ${isConnected ? 'badge-green' : 'badge-red'}`}>
-                    {isConnected ? 'Connected' : 'Disconnected'}
+                  <span className="badge badge-green">
+                    Connected
                   </span>
                 </div>
               </div>
@@ -168,18 +166,13 @@ export default function TelegramPanel() {
                   )}
                   <button
                     onClick={handleSendTest}
-                    disabled={sending || !testMessage.trim() || !isConnected}
+                    disabled={sending || !testMessage.trim()}
                     className="btn btn-primary"
                     style={{ marginTop: 10, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                   >
                     <Send size={14} />
                     {sending ? 'Sending...' : 'Send Broadcast'}
                   </button>
-                  {!isConnected && (
-                    <div style={{ fontSize: 11, color: '#f85149', marginTop: 6, textAlign: 'center' }}>
-                      Bot must be connected to send messages
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

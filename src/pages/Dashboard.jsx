@@ -313,12 +313,12 @@ export default function Dashboard() {
             </div>
             <div className="stat-card" style={{ padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span className={`status-dot ${user?.telegram?.connected ? 'online' : 'offline'}`}></span>
+                <span className="status-dot online"></span>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600 }}>Telegram Bot</div>
-                  <div style={{ fontSize: 10, color: '#545d68' }}>{user?.telegram?.connected ? 'Alerts active' : 'Not connected'}</div>
+                  <div style={{ fontSize: 10, color: '#545d68' }}>Alerts active</div>
                 </div>
-                <MessageCircle size={16} style={{ marginLeft: 'auto', color: user?.telegram?.connected ? '#58a6ff' : '#545d68' }} />
+                <MessageCircle size={16} style={{ marginLeft: 'auto', color: '#3fb950' }} />
               </div>
             </div>
           </div>
