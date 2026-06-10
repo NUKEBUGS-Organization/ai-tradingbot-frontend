@@ -7,6 +7,7 @@ import { normalizeSignalsList, pickMt5LiveAccount, hasLiveMt5Connection, mapRisk
 import { useWebSocket } from '../services/websocket';
 import { Cpu, Activity, Wifi, WifiOff, Zap, Shield, RefreshCw, AlertTriangle, Play, BarChart3 } from 'lucide-react';
 import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalValue';
+import { formatMarketPhase, formatSession } from '../utils/signalDisplay';
 
 const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'GBPJPY', 'XTIUSD'];
 
@@ -272,8 +273,8 @@ export default function EnginePanel() {
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>TP:</span> <strong><MaskedSignalValue signal={analysis.signal} value={analysis.signal.tp} color="#3fb950" /></strong></div>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>Lot Size:</span> <strong><MaskedSignalValue signal={analysis.signal} value={analysis.signal.lot_size} /></strong></div>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>Risk:</span> <strong><MaskedSignalValue signal={analysis.signal} value={analysis.signal.risk_percent != null ? `${analysis.signal.risk_percent}%` : null} /></strong></div>
-                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Session:</span> <strong>{analysis.signal.session}</strong></div>
-                          <div><span style={{ color: '#545d68', fontSize: 11 }}>AMD Phase:</span> <strong>{analysis.signal.amd_phase || '-'}</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>Session:</span> <strong>{formatSession(analysis.signal.session)}</strong></div>
+                          <div><span style={{ color: '#545d68', fontSize: 11 }}>AI Market Phase:</span> <strong>{formatMarketPhase(analysis.signal.amd_phase)}</strong></div>
                         </div>
                       </div>
                     )}
@@ -329,10 +330,10 @@ export default function EnginePanel() {
                           </div>
                           {analysis.analysis?.amd && (
                             <div style={{ marginTop: 12, padding: 12, background: '#0d1117', borderRadius: 8 }}>
-                              <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 8 }}>AMD Phase Analysis</div>
+                              <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 8 }}>AI Market Phase Analysis</div>
                               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: 13 }}>
-                                  Phase:{' '}
+                                  AI Market Phase:{' '}
                                   <strong style={{ color: '#f0883e' }}>
                                     {analysis.analysis.amd.current_phase || 'N/A'}
                                   </strong>

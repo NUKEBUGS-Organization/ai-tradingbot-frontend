@@ -1,4 +1,5 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { formatMarketPhase, formatSession } from '../utils/signalDisplay';
 
 const gradeColor = { 'A+': '#d4af37', A: '#3fb950', B: '#58a6ff', C: '#8b949e', F: '#f85149' };
 const sessionColor = { london: '#58a6ff', newyork: '#3fb950', overlap: '#d4af37', asian: '#8b949e' };
@@ -19,8 +20,8 @@ export function SessionBadge({ session }) {
   const key = String(session).toLowerCase();
   const c = sessionColor[key] || '#8b949e';
   return (
-    <span style={{ background: `${c}22`, color: c, padding: '2px 8px', borderRadius: 12, fontSize: 10, textTransform: 'uppercase' }}>
-      {key}
+    <span style={{ background: `${c}22`, color: c, padding: '2px 8px', borderRadius: 12, fontSize: 10 }}>
+      {formatSession(session)}
     </span>
   );
 }
@@ -28,10 +29,11 @@ export function SessionBadge({ session }) {
 export function AmdPhaseBadge({ phase }) {
   const p = phase || null;
   if (!p) return <span>—</span>;
-  const c = phaseColor[p] || '#8b949e';
+  const key = String(p).toLowerCase();
+  const c = phaseColor[key] || '#8b949e';
   return (
-    <span style={{ background: `${c}22`, color: c, padding: '2px 8px', borderRadius: 12, fontSize: 10, textTransform: 'capitalize' }}>
-      {p}
+    <span style={{ background: `${c}22`, color: c, padding: '2px 8px', borderRadius: 12, fontSize: 10 }} title="AI Market Phase">
+      {formatMarketPhase(p)}
     </span>
   );
 }

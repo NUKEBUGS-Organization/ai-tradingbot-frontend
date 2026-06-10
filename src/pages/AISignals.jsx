@@ -8,6 +8,7 @@ import SignalDetailModal from '../components/SignalDetailModal';
 import { GradeBadge, SessionBadge, AmdPhaseBadge, H4BiasIndicator, RiskBadge } from '../components/signalBadges';
 import { displayProductName } from '../utils/product';
 import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalValue';
+import { formatMarketBias, formatMarketPhase, formatSession } from '../utils/signalDisplay';
 
 export default function AISignals() {
   const { signals: liveSignals } = useWebSocket();
@@ -126,10 +127,16 @@ export default function AISignals() {
                       </div>
                       <span style={{ fontSize: 10, color: '#545d68' }}>{displayProductName(s.strategy)}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: 16, fontSize: 11, color: '#8b949e', fontFamily: 'var(--font-mono)' }}>
-                      <span>Entry: <MaskedSignalValue signal={s} value={s.entryPrice} /></span>
-                      <span>Conf: {isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.confidence} /> : `${s.confidence}%`}</span>
-                      <span>Quality: {isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.qualityScore} /> : s.qualityScore}</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 11, color: '#8b949e' }}>
+                      <span>Session: <strong style={{ color: '#e6edf3' }}>{formatSession(s.session)}</strong></span>
+                      <span>AI Market Phase: <strong style={{ color: '#e6edf3' }}>{formatMarketPhase(s.amdPhase || s.amd_phase)}</strong></span>
+                      <span>Bias: <strong style={{ color: '#e6edf3' }}>{formatMarketBias(s.marketBias || s.h4Bias || s.h4_bias)}</strong></span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 6, fontSize: 11, color: '#8b949e', fontFamily: 'var(--font-mono)' }}>
+                      <span>Entry: <MaskedSignalValue signal={s} value={s.entryPrice ?? s.entry} /></span>
+                      <span>SL: <MaskedSignalValue signal={s} value={s.stopLoss ?? s.sl} color="#f85149" /></span>
+                      <span>TP: <MaskedSignalValue signal={s} value={s.takeProfit ?? s.tp} color="#3fb950" /></span>
+                      {!isSignalMasked(s) && <span>Conf: {s.confidence}%</span>}
                     </div>
                   </div>
                 )) : (
@@ -152,7 +159,7 @@ export default function AISignals() {
                   <thead>
                     <tr>
                       <th>ID</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP</th>
-                      <th>Conf</th><th>Grade</th><th>AMD</th><th>H4</th><th>Session</th><th>Risk</th><th>Reason</th>
+                      <th>Conf</th><th>Grade</th><th>AI Market Phase</th><th>H4 Bias</th><th>Session</th><th>Risk</th><th>Notes</th>
                     </tr>
                   </thead>
                   <tbody>

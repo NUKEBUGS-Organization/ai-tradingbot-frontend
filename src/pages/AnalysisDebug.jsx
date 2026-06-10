@@ -116,7 +116,7 @@ function AnalysisRow({ analysis, index }) {
 
               {analysisData.amd && (
                 <div style={{ background: '#161b22', borderRadius: 8, padding: 12, border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 8 }}>AMD PHASE</div>
+                  <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 8 }}>AI Market Phase</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#f0883e' }}>
                     {(analysisData.amd.current_phase || 'unknown').toUpperCase()}
                   </div>

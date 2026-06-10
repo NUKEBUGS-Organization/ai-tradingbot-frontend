@@ -356,7 +356,7 @@ export default function Dashboard() {
                         <td style={{ color: (t.profit ?? 0) >= 0 ? '#3fb950' : '#f85149', fontWeight: 700 }}>
                           {(t.profit ?? 0) >= 0 ? '+' : ''}{(t.profit ?? 0).toFixed(2)}
                         </td>
-                        <td><span className="badge badge-gold">{t.amdPhase || t.grade || 'AMD'}</span></td>
+                        <td><span className="badge badge-gold">{t.amdPhase || t.amd_phase || 'AI Market Phase'}</span></td>
                       </tr>
                     ))}
                     {(visibleTrades?.[tab] || []).length === 0 && (
