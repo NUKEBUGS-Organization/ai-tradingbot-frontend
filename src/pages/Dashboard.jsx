@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import ForexChartDashboard from '../components/tradingview/ForexChartDashboard';
-import { useAuth } from '../context/AuthContext';
+import TierDashboard from '../components/TierDashboard';
+import { useAuth, getUserTier } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
 import { pickMt5LiveAccount, hasLiveMt5Connection, isSimulatedWsAccount, isMockDemoBalance } from '../utils/tradeMetrics';
@@ -11,6 +12,7 @@ import { DollarSign, TrendingUp, TrendingDown, Activity, Target, BarChart3, Wifi
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const userTier = getUserTier(user);
   const { prices, account, connected } = useWebSocket();
   const [stats, setStats] = useState(null);
   const [trades, setTrades] = useState([]);
@@ -113,6 +115,7 @@ export default function Dashboard() {
       <main className="main-content">
         <Header title="Trading Dashboard" />
         <div className="page-content">
+          <TierDashboard currentTier={userTier} userName={user?.name?.split(' ')[0]} />
           {/* Stats Row */}
           <div className="stats-grid dashboard-stats-grid">
             <div className="stat-card">

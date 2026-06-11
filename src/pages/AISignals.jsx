@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import LockedFeature from '../components/LockedFeature';
+import { useAuth, getUserTier } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
 import { Brain, TrendingUp, TrendingDown, Minus, Activity, Gauge, Clock, BarChart3, Zap, Eye } from 'lucide-react';
@@ -11,6 +13,8 @@ import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalVal
 import { formatMarketBias, formatMarketPhase, formatSession } from '../utils/signalDisplay';
 
 export default function AISignals() {
+  const { user } = useAuth();
+  const userTier = getUserTier(user);
   const { signals: liveSignals } = useWebSocket();
   const [signals, setSignals] = useState([]);
   const [analysis, setAnalysis] = useState(null);
@@ -151,6 +155,12 @@ export default function AISignals() {
           </div>
 
           {/* Signal History */}
+          <LockedFeature
+            requiredTier="discovery"
+            featureName="AI Signal Feed"
+            currentTier={userTier}
+            blur={true}
+          >
           <div className="card">
             <div className="card-header"><span className="card-title"><Brain size={16} /> Live Engine Signals</span><span className="badge badge-blue">{signals.length}</span></div>
             <div className="card-body" style={{ padding: 0 }}>
@@ -218,6 +228,7 @@ export default function AISignals() {
               </div>
             </div>
           </div>
+          </LockedFeature>
         </div>
         <SignalDetailModal signal={selectedSignal} onClose={() => setSelectedSignal(null)} />
       </main>

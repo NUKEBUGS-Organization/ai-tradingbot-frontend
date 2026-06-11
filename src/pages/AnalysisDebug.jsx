@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import LockedFeature from '../components/LockedFeature';
+import { useAuth, getUserTier } from '../context/AuthContext';
 import { Activity, RefreshCw, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
 import api from '../services/api';
 
@@ -196,6 +198,8 @@ function AnalysisRow({ analysis, index }) {
 }
 
 export default function AnalysisDebug() {
+  const { user } = useAuth();
+  const userTier = getUserTier(user);
   const [history, setHistory] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -274,6 +278,12 @@ export default function AnalysisDebug() {
             ))}
           </div>
 
+          <LockedFeature
+            requiredTier="pro"
+            featureName="Advanced AI Analysis"
+            currentTier={userTier}
+            blur={true}
+          >
           <div className="card">
             <div className="card-header">
               <span className="card-title"><Activity size={16} /> Analysis History (last {history.length})</span>
@@ -323,6 +333,7 @@ export default function AnalysisDebug() {
               )}
             </div>
           </div>
+          </LockedFeature>
         </div>
       </main>
     </div>

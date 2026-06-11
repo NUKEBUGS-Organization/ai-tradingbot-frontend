@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import { useAuth } from '../context/AuthContext';
+import LockedFeature from '../components/LockedFeature';
+import { useAuth, getUserTier } from '../context/AuthContext';
 import api from '../services/api';
 import { normalizeSignalsList, pickMt5LiveAccount, hasLiveMt5Connection, mapRiskSettingsForUi } from '../utils/tradeMetrics';
 import { useWebSocket } from '../services/websocket';
@@ -13,6 +14,7 @@ const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'GBPJPY', 'XTIU
 
 export default function EnginePanel() {
   const { user } = useAuth();
+  const userTier = getUserTier(user);
   const { account: wsAccount } = useWebSocket();
   const [engineStatus, setEngineStatus] = useState(null);
   const [riskStatus, setRiskStatus] = useState(null);
@@ -369,6 +371,12 @@ export default function EnginePanel() {
               </div>
             </div>
 
+            <LockedFeature
+              requiredTier="elite"
+              featureName="Advanced Backtesting"
+              currentTier={userTier}
+              blur={true}
+            >
             <div className="card">
               <div className="card-header">
                 <span className="card-title"><BarChart3 size={16} /> Backtest</span>
@@ -404,6 +412,7 @@ export default function EnginePanel() {
                 )}
               </div>
             </div>
+            </LockedFeature>
           </div>
 
           {engineTrades.length > 0 && (

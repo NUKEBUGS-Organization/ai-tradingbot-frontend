@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import { useAuth } from '../context/AuthContext';
+import LockedFeature from '../components/LockedFeature';
+import { useAuth, getUserTier } from '../context/AuthContext';
 import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
 import { Shield, AlertTriangle, TrendingDown, Layers, Zap, Newspaper, BarChart3, Target } from 'lucide-react';
 
 export default function RiskManagement() {
   const { user } = useAuth();
+  const userTier = getUserTier(user);
   const { account } = useWebSocket();
   const [activePreset, setActivePreset] = useState(null);
   const [presetLoading, setPresetLoading] = useState(false);
@@ -99,6 +101,12 @@ export default function RiskManagement() {
             ))}
           </div>
 
+          <LockedFeature
+            requiredTier="pro"
+            featureName="Risk Management Controls"
+            currentTier={userTier}
+            blur={true}
+          >
           <div className="grid-2">
             <div className="card">
               <div className="card-header">
@@ -181,6 +189,7 @@ export default function RiskManagement() {
               </div>
             </div>
           </div>
+          </LockedFeature>
         </div>
       </main>
     </div>

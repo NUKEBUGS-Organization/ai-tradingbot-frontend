@@ -74,6 +74,15 @@ function markTourEligibleLogin(user) {
   }
 }
 
+export const getUserTier = (user) => {
+  if (!user) return 'free';
+  const plan = user.subscription?.plan || user.plan || 'free';
+  if (['elite', 'vcl4x_elite'].includes(plan?.toLowerCase())) return 'elite';
+  if (['pro', 'professional', 'vcl4x_pro'].includes(plan?.toLowerCase())) return 'pro';
+  if (['discovery', 'starter', 'vcl4x_discovery'].includes(plan?.toLowerCase())) return 'discovery';
+  return 'free';
+};
+
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }) {
