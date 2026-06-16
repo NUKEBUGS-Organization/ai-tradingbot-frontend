@@ -1,26 +1,24 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth, hasTierAccess } from '../context/AuthContext';
 
 export default function LockedFeature({
   requiredTier = 'discovery',
   featureName = 'This Feature',
-  currentTier = 'free',
   children,
   blur = true
 }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const tierOrder = { free: 0, discovery: 1, pro: 2, elite: 3 };
-  const hasAccess = tierOrder[currentTier] >= tierOrder[requiredTier];
+  if (hasTierAccess(user, requiredTier)) return children;
 
   const tierLabels = {
     discovery: 'VCL4X Discovery ($99/mo)',
     pro: 'VCL4X PRO ($149/mo)',
     elite: 'VCL4X Elite ($199/mo)'
   };
-
-  if (hasAccess) return children;
 
   return (
     <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden' }}>

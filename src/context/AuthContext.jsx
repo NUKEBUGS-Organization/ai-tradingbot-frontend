@@ -74,6 +74,9 @@ function markTourEligibleLogin(user) {
   }
 }
 
+export const isAdminUser = (user) => user?.role === 'admin';
+
+/** Resolves client subscription tier from plan. Admins are not tier-gated — use hasTierAccess(). */
 export const getUserTier = (user) => {
   if (!user) return 'free';
   const plan = user.subscription?.plan || user.plan || 'free';
@@ -81,6 +84,14 @@ export const getUserTier = (user) => {
   if (['pro', 'professional', 'vcl4x_pro'].includes(plan?.toLowerCase())) return 'pro';
   if (['discovery', 'starter', 'vcl4x_discovery'].includes(plan?.toLowerCase())) return 'discovery';
   return 'free';
+};
+
+const TIER_ORDER = { free: 0, discovery: 1, pro: 2, elite: 3 };
+
+/** Subscription gating applies to clients only; admins always have full access. */
+export const hasTierAccess = (user, requiredTier = 'discovery') => {
+  if (isAdminUser(user)) return true;
+  return (TIER_ORDER[getUserTier(user)] ?? 0) >= (TIER_ORDER[requiredTier] ?? 0);
 };
 
 export const useAuth = () => useContext(AuthContext);
