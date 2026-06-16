@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import api from '../services/api';
-import { Check, X, Key } from 'lucide-react';
+import { Check, X, Key, ShoppingCart } from 'lucide-react';
 
 const plans = [
   {
@@ -146,9 +148,12 @@ const upgradeSteps = [
 ];
 
 export default function Subscriptions() {
+  const navigate = useNavigate();
+  const { addItem, itemCount } = useCart();
   const [isAnnual, setIsAnnual] = useState(false);
   const [isAnnualLicense, setIsAnnualLicense] = useState(false);
   const [mySub, setMySub] = useState(null);
+  const [addedToast, setAddedToast] = useState('');
 
   useEffect(() => { loadData(); }, []);
 
@@ -159,9 +164,28 @@ export default function Subscriptions() {
     } catch (err) { console.error(err); }
   };
 
-  const handleUpgrade = (planId) => {
+  const showAdded = (label) => {
+    setAddedToast(`${label} added to cart`);
+    setTimeout(() => setAddedToast(''), 2500);
+  };
+
+  const handleAddSubscription = (planId) => {
     if (planId === mySub?.plan) return;
-    alert(`This would open the payment gateway for the ${planId} plan.`);
+    addItem({
+      productId: planId,
+      productType: 'subscription',
+      billingInterval: isAnnual ? 'annual' : 'monthly',
+    });
+    showAdded(plans.find((p) => p.id === planId)?.name || 'Plan');
+  };
+
+  const handleAddLicense = (licenseId) => {
+    addItem({
+      productId: licenseId,
+      productType: 'license',
+      billingInterval: isAnnualLicense ? 'renewal' : 'standard',
+    });
+    showAdded(licenses.find((l) => l.id === licenseId)?.name || 'License');
   };
 
   return (
@@ -170,6 +194,29 @@ export default function Subscriptions() {
       <main className="main-content">
         <Header title="Subscription & Licensing" />
         <div className="page-content">
+          {addedToast && (
+            <div style={{
+              position: 'fixed', top: 80, right: 24, zIndex: 1000,
+              background: '#161b22', border: '1px solid rgba(63,185,80,0.4)',
+              color: '#3fb950', padding: '12px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <ShoppingCart size={16} /> {addedToast}
+            </div>
+          )}
+          {itemCount > 0 && (
+            <div className="card mb-24" style={{ borderColor: 'rgba(212,175,55,0.4)' }}>
+              <div className="card-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <ShoppingCart size={18} color="#d4af37" />
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{itemCount} item{itemCount !== 1 ? 's' : ''} in cart</span>
+                </div>
+                <button type="button" className="btn btn-primary" onClick={() => navigate('/checkout')}>
+                  View Cart & Checkout
+                </button>
+              </div>
+            </div>
+          )}
           {mySub && (
             <div className="card mb-24">
               <div className="card-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
@@ -307,10 +354,10 @@ export default function Subscriptions() {
                     <button
                       className={`btn ${isActive ? 'btn-secondary' : 'btn-primary'}`}
                       style={{ width: '100%' }}
-                      onClick={() => handleUpgrade(p.id)}
+                      onClick={() => handleAddSubscription(p.id)}
                       disabled={isActive}
                     >
-                      {isActive ? 'Current Plan' : p.id === 'discovery' ? 'Start Free Trial' : p.id === 'elite' ? 'Go Elite' : 'Get Started'}
+                      {isActive ? 'Current Plan' : p.id === 'discovery' ? 'Add to Cart — Free Trial' : p.id === 'elite' ? 'Add Elite to Cart' : 'Add to Cart'}
                     </button>
                   </div>
                 </div>
@@ -447,8 +494,8 @@ export default function Subscriptions() {
                       </li>
                     ))}
                   </ul>
-                  <button className="btn btn-secondary" style={{ width: '100%' }}>
-                    Get License
+                  <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => handleAddLicense(license.id)}>
+                    Add License to Cart
                   </button>
                 </div>
               </div>

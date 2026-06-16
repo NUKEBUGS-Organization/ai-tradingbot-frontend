@@ -2,6 +2,8 @@ import React, { useRef } from 'react';
 import { useWebSocket } from '../services/websocket';
 import { useMt5Prices, hasLiveMt5Tickers } from '../hooks/useMt5Prices';
 import { useSidebar } from '../context/SidebarContext';
+import { useAuth } from '../context/AuthContext';
+import CartButton from './CartButton';
 import { Bell, Settings, Menu } from 'lucide-react';
 
 const TICKERS = [
@@ -16,6 +18,7 @@ const TICKERS = [
 const PLATFORM_NAME = 'VCL4X AI ECOSYSTEM';
 
 export default function Header({ title }) {
+  const { user } = useAuth();
   const { prices: wsPrices, connected, priceSource } = useWebSocket();
   const prices = useMt5Prices(wsPrices, priceSource);
   const prevBids = useRef({});
@@ -90,6 +93,7 @@ export default function Header({ title }) {
             );
           })}
         </div>
+        {user?.role !== 'admin' && <CartButton />}
         <button className="top-bar-btn"><Bell size={15} /></button>
         <button className="top-bar-btn"><Settings size={15} /></button>
       </div>

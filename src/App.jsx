@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import { SidebarProvider } from './context/SidebarContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -13,6 +14,10 @@ import RiskManagement from './pages/RiskManagement';
 import AISignals from './pages/AISignals';
 import TelegramPanel from './pages/TelegramPanel';
 import Subscriptions from './pages/Subscriptions';
+import Checkout from './pages/Checkout';
+import CheckoutPay from './pages/CheckoutPay';
+import CheckoutSuccess from './pages/CheckoutSuccess';
+import CheckoutCancel from './pages/CheckoutCancel';
 import EnginePanel from './pages/EnginePanel';
 import SignalHistory from './pages/SignalHistory';
 import AnalysisDebug from './pages/AnalysisDebug';
@@ -68,6 +73,7 @@ function HomeRedirect() {
 function App() {
   return (
     <AuthProvider>
+      <CartProvider>
       <RiskDisclosureGate>
       <SidebarProvider>
       <Router>
@@ -98,6 +104,10 @@ function App() {
           <Route path="/signals/history" element={<ProtectedRoute><SubscriptionGate title="Signal History"><SignalHistory /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/telegram" element={<ProtectedRoute adminOnly><TelegramPanel /></ProtectedRoute>} />
           <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/checkout/pay" element={<ProtectedRoute><CheckoutPay /></ProtectedRoute>} />
+          <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
+          <Route path="/checkout/cancel" element={<ProtectedRoute><CheckoutCancel /></ProtectedRoute>} />
           <Route path="/engine" element={<ProtectedRoute><SubscriptionGate title="AI Engine"><EnginePanel /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/analysis" element={<ProtectedRoute><AnalysisDebug /></ProtectedRoute>} />
           <Route path="/terms" element={<Terms />} />
@@ -110,6 +120,7 @@ function App() {
       </Router>
       </SidebarProvider>
       </RiskDisclosureGate>
+      </CartProvider>
     </AuthProvider>
   );
 }

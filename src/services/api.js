@@ -500,6 +500,54 @@ export const api = {
     });
   },
 
+  // —— Checkout / PaymentCloud ——
+  getCheckoutCatalog: async () => {
+    return publicFetch(`${API_BASE}/checkout/catalog`);
+  },
+
+  validateCart: async (items) => {
+    const token = getToken();
+    if (!token) throw new Error('Please log in to checkout');
+    const res = await fetch(`${API_BASE}/checkout/cart`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ items }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Cart validation failed');
+    return data;
+  },
+
+  createCheckoutSession: async (items, referralCode = '') => {
+    const token = getToken();
+    if (!token) throw new Error('Please log in to checkout');
+    const res = await fetch(`${API_BASE}/checkout/session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ items, referralCode }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Checkout session failed');
+    return data;
+  },
+
+  getCheckoutOrder: async (orderNumber) => {
+    return protectedFetch(`${API_BASE}/checkout/order/${orderNumber}`, {}, null);
+  },
+
+  completeCheckout: async (orderNumber, transactionId = '') => {
+    const token = getToken();
+    if (!token) throw new Error('Please log in');
+    const res = await fetch(`${API_BASE}/checkout/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ orderNumber, transactionId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Payment completion failed');
+    return data;
+  },
+
   getReferralInfo: async () => {
     return protectedFetch(`${API_BASE}/referral/my`);
   },
