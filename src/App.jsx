@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider, useAuth, isAdminUser } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { SidebarProvider } from './context/SidebarContext';
 import Login from './pages/Login';
@@ -70,6 +70,13 @@ function HomeRedirect() {
   return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
 }
 
+function ClientOnlyRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (isAdminUser(user)) return <Navigate to="/admin" replace />;
+  return children;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -103,16 +110,16 @@ function App() {
           <Route path="/signals" element={<ProtectedRoute><SubscriptionGate title="AI Signals"><AISignals /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/signals/history" element={<ProtectedRoute><SubscriptionGate title="Signal History"><SignalHistory /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/telegram" element={<ProtectedRoute adminOnly><TelegramPanel /></ProtectedRoute>} />
-          <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />
-          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-          <Route path="/checkout/pay" element={<ProtectedRoute><CheckoutPay /></ProtectedRoute>} />
-          <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
-          <Route path="/checkout/cancel" element={<ProtectedRoute><CheckoutCancel /></ProtectedRoute>} />
+          <Route path="/subscriptions" element={<ProtectedRoute><ClientOnlyRoute><Subscriptions /></ClientOnlyRoute></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><ClientOnlyRoute><Checkout /></ClientOnlyRoute></ProtectedRoute>} />
+          <Route path="/checkout/pay" element={<ProtectedRoute><ClientOnlyRoute><CheckoutPay /></ClientOnlyRoute></ProtectedRoute>} />
+          <Route path="/checkout/success" element={<ProtectedRoute><ClientOnlyRoute><CheckoutSuccess /></ClientOnlyRoute></ProtectedRoute>} />
+          <Route path="/checkout/cancel" element={<ProtectedRoute><ClientOnlyRoute><CheckoutCancel /></ClientOnlyRoute></ProtectedRoute>} />
           <Route path="/engine" element={<ProtectedRoute><SubscriptionGate title="AI Engine"><EnginePanel /></SubscriptionGate></ProtectedRoute>} />
           <Route path="/analysis" element={<ProtectedRoute><AnalysisDebug /></ProtectedRoute>} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
-          <Route path="/referrals" element={<ProtectedRoute><ReferralDashboard /></ProtectedRoute>} />
+          <Route path="/referrals" element={<ProtectedRoute><ClientOnlyRoute><ReferralDashboard /></ClientOnlyRoute></ProtectedRoute>} />
           <Route path="/admin/referrals" element={<ProtectedRoute adminOnly><AdminReferrals /></ProtectedRoute>} />
           <Route path="/" element={<HomeRedirect />} />
         </Routes>

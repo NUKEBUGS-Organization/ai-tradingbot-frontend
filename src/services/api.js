@@ -431,7 +431,15 @@ export const api = {
   },
 
   getAdminUsers: async () => {
-    return protectedFetch(`${API_BASE}/admin/users`, {}, []);
+    const result = await protectedFetch(`${API_BASE}/admin/users`, {}, { users: [], dbConnected: false });
+    if (Array.isArray(result)) return { users: result, dbConnected: true };
+    return {
+      users: result?.users || [],
+      dbConnected: result?.dbConnected !== false,
+      total: result?.total,
+      active: result?.active,
+      message: result?.message,
+    };
   },
 
   toggleUser: async (id) => {

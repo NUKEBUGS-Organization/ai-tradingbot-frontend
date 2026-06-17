@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, isAdminUser } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import { LayoutDashboard, Shield, Brain, MessageCircle, CreditCard, Activity, Users, LogOut, BarChart3, Cpu, History, Gift } from 'lucide-react';
 import BrandLogo from './BrandLogo';
@@ -12,18 +12,22 @@ export default function Sidebar() {
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
+  const admin = isAdminUser(user);
+
   const navItems = [
     { to: '/dashboard', icon: <LayoutDashboard />, label: 'Dashboard', section: 'main' },
     { to: '/engine', icon: <Cpu />, label: 'AI Engine', section: 'main' },
     { to: '/signals', icon: <Brain />, label: 'AI Signals', section: 'main' },
     { to: '/signals/history', icon: <History />, label: 'Signal History', section: 'main' },
     { to: '/risk', icon: <Shield />, label: 'Risk Management', section: 'main' },
-    { to: '/subscriptions', icon: <CreditCard />, label: 'Subscriptions', section: 'tools' },
-    { to: '/referrals', icon: <Gift size={16} />, label: 'Referral Program', section: 'tools' },
+    ...(!admin ? [
+      { to: '/subscriptions', icon: <CreditCard />, label: 'Subscriptions', section: 'tools' },
+      { to: '/referrals', icon: <Gift size={16} />, label: 'Referral Program', section: 'tools' },
+    ] : []),
     { to: '/analysis', icon: <Activity size={16} />, label: 'Analysis Log', section: 'tools' },
   ];
 
-  if (user?.role === 'admin') {
+  if (admin) {
     navItems.splice(1, 0, { to: '/admin', icon: <Users />, label: 'Admin Panel', section: 'main' });
     navItems.push({ to: '/telegram', icon: <MessageCircle />, label: 'Telegram', section: 'tools' });
     navItems.push({ to: '/admin/referrals', icon: <Users size={16} />, label: 'Referral Management', section: 'tools' });
@@ -91,7 +95,7 @@ export default function Sidebar() {
           <div className="sidebar-avatar">{user?.name?.charAt(0) || 'U'}</div>
           <div className="sidebar-user-info">
             <div className="sidebar-user-name">{user?.name || 'User'}</div>
-            <div className="sidebar-user-role">{user?.subscription?.plan || user?.role || 'user'}</div>
+            <div className="sidebar-user-role">{admin ? 'Administrator' : (user?.subscription?.plan || 'user')}</div>
           </div>
           <button onClick={handleLogout} className="top-bar-btn" title="Logout" style={{ marginLeft: 'auto', width: 28, height: 28 }}>
             <LogOut size={14} />

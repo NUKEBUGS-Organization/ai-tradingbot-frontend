@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 export default function AdminPanel() {
   const [data, setData] = useState(null);
   const [users, setUsers] = useState([]);
+  const [usersMeta, setUsersMeta] = useState({ dbConnected: true, message: '' });
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [broadcastTarget, setBroadcastTarget] = useState('all');
   const [broadcastSymbol, setBroadcastSymbol] = useState('XAUUSD');
@@ -22,7 +23,13 @@ export default function AdminPanel() {
     try {
       const [d, u] = await Promise.all([api.getAdminDashboard(), api.getAdminUsers()]);
       setData(d);
-      setUsers(u);
+      setUsers(u.users || []);
+      setUsersMeta({
+        dbConnected: u.dbConnected !== false,
+        total: u.total,
+        active: u.active,
+        message: u.message || '',
+      });
     } catch (err) { console.error(err); }
   };
 
@@ -53,11 +60,11 @@ export default function AdminPanel() {
   };
 
   const planData = data ? [
-    { name: 'Free', value: data.subscriptions.distribution.free, color: '#545d68' },
-    { name: 'Starter', value: data.subscriptions.distribution.starter, color: '#58a6ff' },
-    { name: 'Pro', value: data.subscriptions.distribution.professional, color: '#d4af37' },
-    { name: 'Enterprise', value: data.subscriptions.distribution.enterprise, color: '#a78bfa' },
-  ] : [];
+    { name: 'Free', value: data.subscriptions.distribution.free || 0, color: '#545d68' },
+    { name: 'Discovery', value: data.subscriptions.distribution.discovery || 0, color: '#3fb950' },
+    { name: 'Pro', value: (data.subscriptions.distribution.pro || 0) + (data.subscriptions.distribution.professional || 0) + (data.subscriptions.distribution.starter || 0), color: '#d4af37' },
+    { name: 'Elite', value: (data.subscriptions.distribution.elite || 0) + (data.subscriptions.distribution.enterprise || 0), color: '#f0883e' },
+  ].filter((p) => p.value > 0) : [];
 
   const healthItems = data ? [
     { label: 'API Server', status: data.systemHealth.apiStatus, icon: <Server size={14} /> },
@@ -85,9 +92,9 @@ export default function AdminPanel() {
             <>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-card-header"><span className="stat-card-label">Total Users</span><div className="stat-card-icon blue"><Users size={16} /></div></div>
-                  <div className="stat-card-value">{data.users.total}</div>
-                  <div className="stat-card-change up">{data.users.active} active</div>
+                  <div className="stat-card-header"><span className="stat-card-label">Registered Users</span><div className="stat-card-icon blue"><Users size={16} /></div></div>
+                  <div className="stat-card-value">{data.users.registered ?? data.users.total}</div>
+                  <div className="stat-card-change up">{data.users.active} active accounts</div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-card-header"><span className="stat-card-label">Subscriptions</span><div className="stat-card-icon gold"><CreditCard size={16} /></div></div>
@@ -151,21 +158,35 @@ export default function AdminPanel() {
 
           {tab === 'users' && (
             <div className="card">
-              <div className="card-header"><span className="card-title"><Users size={16} /> User Management</span><span className="badge badge-blue">{users.length} users</span></div>
+              <div className="card-header">
+                <span className="card-title"><Users size={16} /> Registered Platform Users</span>
+                <span className="badge badge-blue">{users.length} accounts</span>
+              </div>
               <div className="card-body" style={{ padding: 0 }}>
+                {!usersMeta.dbConnected && (
+                  <div style={{ padding: 24, textAlign: 'center', color: '#f85149', fontSize: 13 }}>
+                    {usersMeta.message || 'Database is offline. Registered users cannot be loaded until MongoDB is connected.'}
+                  </div>
+                )}
+                {usersMeta.dbConnected && users.length === 0 && (
+                  <div style={{ padding: 40, textAlign: 'center', color: '#8b949e' }}>
+                    No registered users yet. Accounts appear here when clients sign up on the platform.
+                  </div>
+                )}
+                {users.length > 0 && (
                 <div className="table-container">
                   <table>
-                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Status</th><th>Balance</th><th>Win Rate</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Verified</th><th>Registered</th><th>Balance</th><th>Actions</th></tr></thead>
                     <tbody>
                       {users.map(u => (
                         <tr key={u._id}>
                           <td style={{ color: '#e6edf3', fontWeight: 600 }}>{u.name}</td>
                           <td>{u.email}</td>
-                          <td><span className={`badge ${u.role === 'admin' ? 'badge-purple' : 'badge-blue'}`}>{u.role}</span></td>
-                          <td><span className="badge badge-gold">{u.subscription?.plan}</span></td>
+                          <td><span className="badge badge-gold">{u.subscription?.plan || 'free'}</span></td>
                           <td><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'Active' : 'Disabled'}</span></td>
-                          <td style={{ fontFamily: 'var(--font-mono)' }}>${u.mt5Account?.balance?.toFixed(2)}</td>
-                          <td style={{ fontFamily: 'var(--font-mono)', color: '#3fb950' }}>{u.stats?.winRate?.toFixed(1)}%</td>
+                          <td><span className={`badge ${u.emailVerified ? 'badge-green' : 'badge-red'}`}>{u.emailVerified ? 'Yes' : 'No'}</span></td>
+                          <td style={{ fontSize: 12, color: '#8b949e' }}>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
+                          <td style={{ fontFamily: 'var(--font-mono)' }}>${(u.mt5Account?.balance ?? 0).toFixed(2)}</td>
                           <td>
                             <button className={`btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-secondary'}`} onClick={() => toggleUser(u._id)}>
                               {u.isActive ? <><UserX size={12} /> Disable</> : <><UserCheck size={12} /> Enable</>}
@@ -176,6 +197,7 @@ export default function AdminPanel() {
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             </div>
           )}

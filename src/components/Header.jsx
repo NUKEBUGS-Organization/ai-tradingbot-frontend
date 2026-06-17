@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { useWebSocket } from '../services/websocket';
 import { useMt5Prices, hasLiveMt5Tickers } from '../hooks/useMt5Prices';
 import { useSidebar } from '../context/SidebarContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, isAdminUser } from '../context/AuthContext';
 import CartButton from './CartButton';
 import { Bell, Settings, Menu } from 'lucide-react';
 
@@ -93,7 +93,7 @@ export default function Header({ title }) {
             );
           })}
         </div>
-        {user?.role !== 'admin' && <CartButton />}
+        {user && !isAdminUser(user) && <CartButton />}
         <button className="top-bar-btn"><Bell size={15} /></button>
         <button className="top-bar-btn"><Settings size={15} /></button>
       </div>

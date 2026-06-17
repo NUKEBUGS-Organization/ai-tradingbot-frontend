@@ -1,9 +1,16 @@
-const PAID_PLANS = ['starter', 'professional', 'enterprise'];
+const PAID_PLANS = ['starter', 'professional', 'enterprise', 'discovery', 'pro', 'elite'];
 const DEMO_EMAILS = ['demo@gmail.com', 'demo@aurumx.com'];
+const ADMIN_EMAILS = ['admin@vcl4xengine.com', 'admin@aurumx.com'];
+
+function isAdmin(user) {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  return ADMIN_EMAILS.includes(String(user.email || '').toLowerCase());
+}
 
 export function hasActiveSubscription(user) {
   if (!user) return false;
-  if (user.role === 'admin') return true;
+  if (isAdmin(user)) return true;
   if (DEMO_EMAILS.includes(String(user.email || '').toLowerCase())) return true;
 
   const sub = user.subscription || {};
@@ -20,7 +27,7 @@ export function hasActiveSubscription(user) {
 
 export function hasFullSignalAccess(user) {
   if (!user) return false;
-  if (user.role === 'admin') return true;
+  if (isAdmin(user)) return true;
   if (DEMO_EMAILS.includes(String(user.email || '').toLowerCase())) return true;
 
   const sub = user.subscription || {};

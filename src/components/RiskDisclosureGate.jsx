@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, isAdminUser } from '../context/AuthContext';
 import BrandLogo from './BrandLogo';
 import {
   RISK_DISCLOSURE_TITLE,
@@ -34,6 +34,7 @@ export default function RiskDisclosureGate({ children }) {
   const [error, setError] = useState('');
 
   if (loading || !user) return children;
+  if (isAdminUser(user)) return children;
   if (hasAcceptedRiskDisclosure(user)) return children;
 
   const handleAccept = async () => {
