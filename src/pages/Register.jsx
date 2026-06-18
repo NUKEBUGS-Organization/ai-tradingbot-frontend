@@ -51,10 +51,12 @@ export default function Register() {
     try {
       const data = await register(name, email, password, acceptTerms, referralCode);
       if (data?.requiresVerification) {
-        navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
+        const params = new URLSearchParams({ email });
+        if (data.emailSent === false) params.set('delivery', 'failed');
+        navigate(`/verify-email?${params.toString()}`, { replace: true });
         return;
       }
-      navigate('/dashboard');
+      setError('Registration requires email verification. Please try again.');
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {

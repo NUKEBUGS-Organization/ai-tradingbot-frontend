@@ -181,11 +181,7 @@ export function AuthProvider({ children }) {
     if (data?.requiresVerification) {
       return data;
     }
-    if (!data?.token) throw new Error('Registration failed');
-    persistSession(data.token, data, true);
-    setToken(data.token);
-    setUser(data);
-    return data;
+    throw new Error(data?.message || 'Registration requires email verification');
   };
 
   const acceptRiskDisclosure = useCallback(async () => {

@@ -66,7 +66,7 @@ export default function Login() {
               to={`/verify-email?email=${encodeURIComponent(unverifiedEmail)}`}
               style={{ color: '#d4af37' }}
             >
-              Resend verification email
+              Enter verification code
             </Link>
           </div>
         )}

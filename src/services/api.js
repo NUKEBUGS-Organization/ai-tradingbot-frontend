@@ -187,10 +187,10 @@ export const api = {
     });
   },
 
-  verifyEmail: async (token) => {
+  verifyEmail: async (email, otp) => {
     return publicFetch(`${API_BASE}/auth/verify-email`, {
       method: 'POST',
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ email, otp }),
     });
   },
 
