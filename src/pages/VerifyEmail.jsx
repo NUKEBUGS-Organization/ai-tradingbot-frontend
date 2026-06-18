@@ -97,7 +97,8 @@ export default function VerifyEmail() {
       setDigits(Array(OTP_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
     } catch (err) {
-      setError(err.message || 'Could not send verification code');
+      const detail = err.emailError ? ` (${err.emailError})` : '';
+      setError((err.message || 'Could not send verification code') + detail);
     } finally {
       setResendLoading(false);
     }
@@ -115,8 +116,8 @@ export default function VerifyEmail() {
 
         {deliveryFailed && (
           <div className="login-error" style={{ marginBottom: 16 }}>
-            We could not deliver the verification email. Check spam, use Resend code, or contact support.
-            Ensure RESEND_API_KEY and a verified sender domain are configured on the server.
+            We could not deliver the verification email. The sending domain must be verified in Resend
+            (vcl4xengine.com). Click &quot;Resend Code&quot; after domain setup, or check spam.
           </div>
         )}
 

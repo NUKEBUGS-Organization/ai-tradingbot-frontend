@@ -24,6 +24,10 @@ RUN echo 'server { \
         index index.html; \
         try_files $uri $uri/ /index.html; \
     } \
+    location = /index.html { \
+        root /usr/share/nginx/html; \
+        add_header Cache-Control "no-cache, no-store, must-revalidate"; \
+    } \
 }' > /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

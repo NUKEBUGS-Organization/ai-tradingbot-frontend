@@ -63,6 +63,8 @@ const publicFetch = async (url, options = {}) => {
     err.status = res.status;
     err.code = data.code;
     err.email = data.email;
+    err.emailError = data.emailError;
+    err.emailSent = data.emailSent;
     throw err;
   }
   return data;
