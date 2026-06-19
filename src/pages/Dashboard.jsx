@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import ForexChartDashboard from '../components/tradingview/ForexChartDashboard';
@@ -12,6 +13,7 @@ import { DollarSign, TrendingUp, TrendingDown, Activity, Target, BarChart3, Wifi
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const userTier = getUserTier(user);
   const { prices, account, connected } = useWebSocket();
   const [stats, setStats] = useState(null);
@@ -117,6 +119,32 @@ export default function Dashboard() {
         <div className="page-content">
           {!isAdminUser(user) && (
             <TierDashboard currentTier={userTier} userName={user?.name?.split(' ')[0]} />
+          )}
+          {user?.subscription?.status === 'trialing' && (
+            <div style={{
+              background: 'rgba(212,175,55,0.1)',
+              border: '1px solid rgba(212,175,55,0.3)',
+              borderRadius: 8, padding: '12px 16px', marginBottom: 16,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              flexWrap: 'wrap', gap: 8
+            }}>
+              <div style={{ fontSize: 13, color: '#d4af37' }}>
+                🎯 <strong>Free Trial Active</strong> —
+                {user.subscription.trialEndsAt ?
+                  ` ${Math.max(0, Math.ceil((new Date(user.subscription.trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24)))} days remaining`
+                  : ' 5 days remaining'}
+              </div>
+              <button
+                onClick={() => navigate('/subscriptions')}
+                style={{
+                  background: '#d4af37', color: '#0a0a0f',
+                  border: 'none', borderRadius: 6, padding: '6px 14px',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer'
+                }}
+              >
+                Upgrade Now
+              </button>
+            </div>
           )}
           {/* Stats Row */}
           <div className="stats-grid dashboard-stats-grid">
