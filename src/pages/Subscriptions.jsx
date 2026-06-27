@@ -200,7 +200,7 @@ export default function Subscriptions() {
               background: '#161b22', border: '1px solid rgba(63,185,80,0.4)',
               color: '#3fb950', padding: '12px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 8,
-            }}>
+            }} className="subscriptions-toast">
               <ShoppingCart size={16} /> {addedToast}
             </div>
           )}
@@ -283,23 +283,17 @@ export default function Subscriptions() {
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 40 }}>
+          <div className="subscriptions-plans-grid">
             {plans.map((p) => {
               const isActive = mySub?.plan === p.id;
 
               return (
                 <div
                   key={p.id}
-                  className="card"
+                  className={`card subscription-plan-card${p.highlighted ? ' highlighted' : ''}${isActive ? ' active' : ''}`}
                   style={{
                     position: 'relative',
                     borderColor: isActive ? 'var(--gold)' : p.highlighted ? 'rgba(212,175,55,0.6)' : 'var(--border-primary)',
-                    transform: p.highlighted ? 'scale(1.02)' : isActive ? 'scale(1.01)' : 'none',
-                    boxShadow: p.highlighted
-                      ? '0 0 32px rgba(212,175,55,0.25), 0 0 0 1px rgba(212,175,55,0.3)'
-                      : isActive
-                        ? '0 0 20px rgba(212,175,55,0.1)'
-                        : 'none',
                     zIndex: p.highlighted || isActive ? 2 : 1,
                   }}
                 >
@@ -457,7 +451,7 @@ export default function Subscriptions() {
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
+          <div className="subscriptions-licenses-grid">
             {licenses.map((license) => (
               <div
                 key={license.id}

@@ -81,7 +81,7 @@ export default function AdminPanel() {
       <main className="main-content">
         <Header title="Admin Panel" />
         <div className="page-content">
-          <div className="tabs" style={{ maxWidth: 500 }}>
+          <div className="tabs tabs-scroll">
             <button className={`tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>Overview</button>
             <button className={`tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>Users</button>
             <button className={`tab ${tab === 'broadcast' ? 'active' : ''}`} onClick={() => setTab('broadcast')}>Broadcast</button>
@@ -132,7 +132,7 @@ export default function AdminPanel() {
                 <div className="card">
                   <div className="card-header"><span className="card-title"><Activity size={16} /> Active Signals</span></div>
                   <div className="card-body">
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div className="admin-mini-grid">
                       <div style={{ padding: 20, background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
                         <div style={{ fontSize: 28, fontWeight: 800, color: '#d4af37', fontFamily: 'var(--font-mono)' }}>{data.signals.active}</div>
                         <div style={{ fontSize: 10, color: '#545d68', marginTop: 4 }}>ACTIVE SIGNALS</div>
@@ -174,7 +174,7 @@ export default function AdminPanel() {
                   </div>
                 )}
                 {users.length > 0 && (
-                <div className="table-container">
+                <div className="table-responsive overflow-table-wrapper">
                   <table>
                     <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Verified</th><th>Registered</th><th>Balance</th><th>Actions</th></tr></thead>
                     <tbody>
@@ -215,7 +215,7 @@ export default function AdminPanel() {
                   Only signals meeting the minimum confidence threshold will be sent.
                 </p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                <div className="responsive-grid-2" style={{ marginBottom: 16 }}>
                   <div>
                     <label style={{ fontSize: 12, color: '#8b949e', display: 'block', marginBottom: 6 }}>Symbol</label>
                     <select

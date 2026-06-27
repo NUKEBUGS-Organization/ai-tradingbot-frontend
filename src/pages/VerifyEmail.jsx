@@ -148,8 +148,14 @@ export default function VerifyEmail() {
           <div className="form-group">
             <label className="form-label">Verification Code</label>
             <div
-              style={{ display: 'flex', gap: 10, justifyContent: 'center' }}
+              style={{
+                display: 'flex',
+                gap: 10,
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+              }}
               onPaste={handlePaste}
+              className="verify-otp-row"
             >
               {digits.map((digit, index) => (
                 <input
@@ -159,19 +165,10 @@ export default function VerifyEmail() {
                   inputMode="numeric"
                   autoComplete={index === 0 ? 'one-time-code' : 'off'}
                   maxLength={1}
-                  className="form-input"
+                  className="form-input verify-otp-input"
                   value={digit}
                   onChange={(e) => handleDigitChange(index, e.target.value)}
                   onKeyDown={(e) => handleDigitKeyDown(index, e)}
-                  style={{
-                    width: 48,
-                    height: 52,
-                    textAlign: 'center',
-                    fontSize: 22,
-                    fontWeight: 700,
-                    letterSpacing: 2,
-                    padding: 0,
-                  }}
                   aria-label={`Digit ${index + 1}`}
                 />
               ))}

@@ -261,16 +261,7 @@ export default function Dashboard() {
                 </div>
                 )}
                 {hasLiveMt5Account && tradeStats && (
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                      gap: 12,
-                      marginTop: 16,
-                      paddingTop: 16,
-                      borderTop: '1px solid var(--border-subtle)',
-                    }}
-                  >
+                  <div className="dashboard-trade-stats">
                     <div>
                       <div style={{ fontSize: 10, color: '#545d68' }}>Best Trade</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#3fb950' }}>+${tradeStats.best.toFixed(2)}</div>

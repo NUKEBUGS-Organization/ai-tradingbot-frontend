@@ -63,7 +63,7 @@ export default function SignalHistory() {
       <main className="main-content">
         <Header title="Signal History" />
         <div className="page-content">
-          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="stats-grid signal-stats-4">
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-label">Total Signals</span>

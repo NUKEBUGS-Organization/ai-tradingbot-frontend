@@ -65,7 +65,7 @@ export default function Checkout() {
       <Sidebar />
       <main className="main-content">
         <Header title="Checkout" />
-        <div className="page-content" style={{ maxWidth: 960, margin: '0 auto' }}>
+        <div className="page-content page-content-narrow">
           {itemCount === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 48 }}>
               <ShoppingCart size={40} style={{ color: '#545d68', marginBottom: 16 }} />
@@ -76,7 +76,7 @@ export default function Checkout() {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }}>
+            <div className="checkout-layout">
               <div className="card">
                 <div className="card-header">
                   <span className="card-title"><ShoppingCart size={16} /> Cart ({itemCount})</span>
@@ -88,13 +88,7 @@ export default function Checkout() {
                   {(summary?.lines || []).map((line) => (
                     <div
                       key={`${line.productId}-${line.billingInterval}`}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        gap: 16,
-                        padding: '16px 0',
-                        borderBottom: '1px solid var(--border-subtle)',
-                      }}
+                      className="checkout-line-item"
                     >
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 14, color: '#e6edf3' }}>{line.name}</div>
@@ -125,7 +119,7 @@ export default function Checkout() {
                 </div>
               </div>
 
-              <div className="card" style={{ position: 'sticky', top: 24 }}>
+              <div className="card checkout-summary-card">
                 <div className="card-header">
                   <span className="card-title"><CreditCard size={16} /> Order Summary</span>
                 </div>

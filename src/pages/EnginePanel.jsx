@@ -132,7 +132,7 @@ export default function EnginePanel() {
             </div>
           </div>
 
-          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="stats-grid engine-stats-4">
             <div className="stat-card">
               <div className="stat-card-header">
                 <span className="stat-card-label">AI Engine</span>
@@ -178,7 +178,7 @@ export default function EnginePanel() {
               </span>
             </div>
             <div className="card-body">
-              <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
+              <div className="stats-grid engine-risk-stats">
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: '#d4af37', fontFamily: 'var(--font-mono)' }}>{riskStatus?.preset || 'N/A'}</div>
                   <div style={{ fontSize: 10, color: '#545d68', marginTop: 4 }}>PRESET</div>
@@ -262,7 +262,7 @@ export default function EnginePanel() {
                     </div>
                     {analysis.signal && (
                       <div style={{ background: '#161b22', borderRadius: 8, padding: 16, border: '1px solid #21262d' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        <div className="responsive-grid-2" style={{ gap: 8 }}>
                           <div><span style={{ color: '#545d68', fontSize: 11 }}>Direction:</span> <strong style={{ color: analysis.signal.type === 'BUY' ? '#3fb950' : '#f85149' }}>{analysis.signal.type}</strong></div>
                           <div>
                             <span style={{ color: '#545d68', fontSize: 11 }}>Entry:</span>{' '}
@@ -391,7 +391,7 @@ export default function EnginePanel() {
               </div>
               <div className="card-body" style={{ minHeight: 200 }}>
                 {backtest?.metrics ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="responsive-grid-2" style={{ gap: 12 }}>
                     <div><span style={{ color: '#545d68', fontSize: 11 }}>Total Trades:</span><br /><strong>{backtest.metrics.total_trades}</strong></div>
                     <div><span style={{ color: '#545d68', fontSize: 11 }}>Win Rate:</span><br /><strong style={{ color: '#3fb950' }}>{backtest.metrics.win_rate}%</strong></div>
                     <div><span style={{ color: '#545d68', fontSize: 11 }}>Profit:</span><br /><strong style={{ color: (backtest.metrics.total_profit ?? 0) >= 0 ? '#3fb950' : '#f85149' }}>${backtest.metrics.total_profit}</strong></div>

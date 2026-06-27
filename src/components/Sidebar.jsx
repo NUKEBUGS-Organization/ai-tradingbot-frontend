@@ -2,13 +2,13 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth, isAdminUser } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
-import { LayoutDashboard, Shield, Brain, MessageCircle, CreditCard, Activity, Users, LogOut, BarChart3, Cpu, History, Gift } from 'lucide-react';
+import { LayoutDashboard, Shield, Brain, MessageCircle, CreditCard, Activity, Users, LogOut, Cpu, History, Gift } from 'lucide-react';
 import BrandLogo from './BrandLogo';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { open: mobileOpen, close, toggle } = useSidebar();
+  const { open: mobileOpen, close } = useSidebar();
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -38,15 +38,6 @@ export default function Sidebar() {
 
   return (
     <>
-      <button
-        type="button"
-        className="mobile-menu-btn sidebar-hamburger"
-        onClick={toggle}
-        aria-label="Open navigation menu"
-      >
-        ☰
-      </button>
-
       {mobileOpen && (
         <div
           className="sidebar-overlay mobile-overlay"
@@ -56,53 +47,53 @@ export default function Sidebar() {
       )}
 
       <aside className={`sidebar${mobileOpen ? ' open mobile-open' : ''}`}>
-      <button
-        type="button"
-        className="mobile-close-btn"
-        onClick={close}
-        aria-label="Close navigation menu"
-      >
-        ✕
-      </button>
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
-          <BrandLogo size={36} className="sidebar-logo-img" />
-          <div className="sidebar-logo-text">VCL<span>4X</span> AI ECOSYSTEM</div>
-        </div>
-      </div>
-      <nav className="sidebar-nav">
-        <div className="nav-section">
-          <div className="nav-section-title">Overview</div>
-          {mainItems.map(item => (
-            <NavLink key={item.to} to={item.to} onClick={close} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              {item.icon}
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
-        <div className="nav-section">
-          <div className="nav-section-title">Tools</div>
-          {toolItems.map(item => (
-            <NavLink key={item.to} to={item.to} onClick={close} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              {item.icon}
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
-      </nav>
-      <div className="sidebar-footer">
-        <div className="sidebar-user">
-          <div className="sidebar-avatar">{user?.name?.charAt(0) || 'U'}</div>
-          <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{user?.name || 'User'}</div>
-            <div className="sidebar-user-role">{admin ? 'Administrator' : (user?.subscription?.plan || 'user')}</div>
+        <button
+          type="button"
+          className="mobile-close-btn"
+          onClick={close}
+          aria-label="Close navigation menu"
+        >
+          ✕
+        </button>
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <BrandLogo size={36} className="sidebar-logo-img" />
+            <div className="sidebar-logo-text">VCL<span>4X</span> AI ECOSYSTEM</div>
           </div>
-          <button onClick={handleLogout} className="top-bar-btn" title="Logout" style={{ marginLeft: 'auto', width: 28, height: 28 }}>
-            <LogOut size={14} />
-          </button>
         </div>
-      </div>
-    </aside>
+        <nav className="sidebar-nav">
+          <div className="nav-section">
+            <div className="nav-section-title">Overview</div>
+            {mainItems.map(item => (
+              <NavLink key={item.to} to={item.to} onClick={close} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                {item.icon}
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+          <div className="nav-section">
+            <div className="nav-section-title">Tools</div>
+            {toolItems.map(item => (
+              <NavLink key={item.to} to={item.to} onClick={close} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                {item.icon}
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+        <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <div className="sidebar-avatar">{user?.name?.charAt(0) || 'U'}</div>
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-name">{user?.name || 'User'}</div>
+              <div className="sidebar-user-role">{admin ? 'Administrator' : (user?.subscription?.plan || 'user')}</div>
+            </div>
+            <button onClick={handleLogout} className="top-bar-btn" title="Logout" style={{ marginLeft: 'auto', width: 28, height: 28 }}>
+              <LogOut size={14} />
+            </button>
+          </div>
+        </div>
+      </aside>
     </>
   );
 }
