@@ -1529,6 +1529,40 @@ tr:hover td { background: rgba(255,255,255,0.015); }
   padding: 20px 18px;
 }
 
+.subscription-vs-item-gold {
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+.subscription-vs-item-blue {
+  border-color: rgba(88, 166, 255, 0.45);
+}
+
+.subscription-vs-pricing {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 14px 0 4px;
+  line-height: 1.5;
+}
+
+.subscription-vs-pricing.gold { color: #3fb950; }
+.subscription-vs-pricing.blue { color: #58a6ff; }
+
+.subscription-vs-interval {
+  font-size: 12px;
+  color: #545d68;
+  margin: 0;
+}
+
+.subscription-vs-footnote {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13px;
+  color: #8b949e;
+  text-align: center;
+  line-height: 1.5;
+}
+
 .subscription-vs-icon {
   width: 44px;
   height: 44px;

@@ -257,29 +257,39 @@ export default function Subscriptions() {
                 Many customers ask this. Here is the simple explanation.
               </p>
               <div className="subscription-vs-grid">
-                <div className="subscription-vs-item">
+                <div className="subscription-vs-item subscription-vs-item-gold">
                   <div className="subscription-vs-icon gold">
                     <BarChart3 size={22} />
                   </div>
                   <h4 className="subscription-vs-item-title gold">Subscription Plans</h4>
                   <p className="subscription-vs-item-text">
-                    Monthly or annual access to the VCL4X analytics platform — AI signals,
-                    market intelligence, risk tools, and the trading dashboard. You learn and
-                    analyze; execution stays manual unless you add a license.
+                    Monthly or annual access to the VCL4X analytics platform. You receive market
+                    intelligence, pattern alerts, and research insights. You make your own trading
+                    decisions.
                   </p>
+                  <p className="subscription-vs-pricing gold">
+                    Discovery $99 · PRO $149 · Elite $199
+                  </p>
+                  <p className="subscription-vs-interval">Per month</p>
                 </div>
-                <div className="subscription-vs-item">
+                <div className="subscription-vs-item subscription-vs-item-blue">
                   <div className="subscription-vs-icon blue">
                     <Settings2 size={22} />
                   </div>
                   <h4 className="subscription-vs-item-title blue">Auto-Trading Licenses</h4>
                   <p className="subscription-vs-item-text">
-                    Connect your own MT5 account to receive automated signal execution through
-                    the VCL4X EA. Requires an active subscription plus a separate license for
-                    each automation tier.
+                    Connect your own MT5 account to receive automated signal execution. The AI engine
+                    sends trade parameters directly to your MT5 terminal. Your account, your control.
                   </p>
+                  <p className="subscription-vs-pricing blue">
+                    Personal $2,300 · Pro $2,999 · Elite $3,699
+                  </p>
+                  <p className="subscription-vs-interval">Per 6 months</p>
                 </div>
               </div>
+              <p className="subscription-vs-footnote">
+                A subscription is required before purchasing an auto-trading license.
+              </p>
             </div>
           </div>
 
