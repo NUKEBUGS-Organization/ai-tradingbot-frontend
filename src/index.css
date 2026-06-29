@@ -222,7 +222,7 @@ body {
 .top-bar-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); }
 
 /* ========== PAGE CONTENT ========== */
-.page-content { padding: 24px; flex: 1; }
+.page-content { padding: 24px; padding-bottom: max(32px, env(safe-area-inset-bottom)); flex: 1; min-width: 0; }
 
 /* ========== CARDS ========== */
 .card {
