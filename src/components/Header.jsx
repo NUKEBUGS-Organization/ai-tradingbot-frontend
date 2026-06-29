@@ -51,7 +51,7 @@ export default function Header({ title }) {
           </span>
           <h1 className="page-title header-title">{title}</h1>
         </div>
-        <div className="live-indicator">
+        <div className="live-indicator hide-mobile-flex">
           <span
             className="live-dot"
             style={{
@@ -60,7 +60,9 @@ export default function Header({ title }) {
             }}
             title={connected ? (isMt5 ? 'MT5 live prices' : 'Waiting for MT5 quotes') : 'Disconnected'}
           />
-          {connected ? (isMt5 ? 'MT5 LIVE' : 'WAITING') : 'OFFLINE'}
+          <span className="live-indicator-text">
+            {connected ? (isMt5 ? 'MT5 LIVE' : 'WAITING') : 'OFFLINE'}
+          </span>
         </div>
       </div>
       <div className="top-bar-right">
@@ -94,8 +96,12 @@ export default function Header({ title }) {
           })}
         </div>
         {user && !isAdminUser(user) && <CartButton />}
-        <button className="top-bar-btn"><Bell size={15} /></button>
-        <button className="top-bar-btn"><Settings size={15} /></button>
+        <button type="button" className="top-bar-btn hide-mobile-flex" aria-label="Notifications">
+          <Bell size={15} />
+        </button>
+        <button type="button" className="top-bar-btn hide-mobile-flex" aria-label="Settings">
+          <Settings size={15} />
+        </button>
       </div>
     </header>
   );

@@ -10,23 +10,12 @@ export default function CartButton() {
   return (
     <button
       type="button"
+      className="cart-btn"
       onClick={() => navigate('/checkout')}
       aria-label={`Open cart (${itemCount} items)`}
-      style={{
-        position: 'relative',
-        background: 'transparent',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: 8,
-        padding: '6px 10px',
-        cursor: 'pointer',
-        color: '#e6edf3',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-      }}
     >
       <ShoppingCart size={16} />
-      <span style={{ fontSize: 12, fontWeight: 600 }}>Cart</span>
+      <span className="cart-btn-label">Cart</span>
       {itemCount > 0 && (
         <span style={{
           position: 'absolute',

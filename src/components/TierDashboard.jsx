@@ -87,44 +87,38 @@ export default function TierDashboard({ currentTier = 'free', userName = '' }) {
   };
 
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div className="tier-dashboard">
       {/* Current Plan Banner */}
-      <div style={{
-        background: '#161b22', border: `1px solid ${tierColors[currentTier]}44`,
-        borderRadius: 12, padding: '16px 20px', marginBottom: 16,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        flexWrap: 'wrap', gap: 12
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{
-            background: `${tierColors[currentTier]}22`,
-            color: tierColors[currentTier],
-            padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700
-          }}>
+      <div
+        className="tier-dashboard-banner"
+        style={{ border: `1px solid ${tierColors[currentTier]}44` }}
+      >
+        <div className="tier-dashboard-banner-info">
+          <span
+            className="tier-dashboard-badge"
+            style={{ background: `${tierColors[currentTier]}22`, color: tierColors[currentTier] }}
+          >
             {tierBadges[currentTier]}
           </span>
-          <span style={{ fontSize: 14, color: '#e6edf3' }}>
+          <span className="tier-dashboard-welcome">
             {userName ? `Welcome back, ${userName}` : 'Your Current Plan'}
           </span>
         </div>
         {upgrade && (
           <button
+            type="button"
+            className="tier-dashboard-upgrade-btn"
             onClick={() => navigate('/subscriptions')}
-            style={{
-              background: 'linear-gradient(135deg, #d4af37, #f0c040)',
-              color: '#0a0a0f', border: 'none', borderRadius: 8,
-              padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer'
-            }}
           >
             Upgrade to {upgrade.label} — {upgrade.price}
           </button>
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: upgrade ? '1fr 1fr 1fr' : '1fr 1fr', gap: 16 }}>
+      <div className={`tier-dashboard-grid${upgrade ? ' tier-dashboard-grid--upgrade' : ''}`}>
 
         {/* Active Access */}
-        <div style={{ background: '#161b22', border: '1px solid rgba(63,185,80,0.3)', borderRadius: 12, padding: 20 }}>
+        <div className="tier-dashboard-card tier-dashboard-card--active">
           <div style={{ fontSize: 12, color: '#3fb950', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
             <CheckCircle size={14} /> ACTIVE ACCESS
           </div>
@@ -141,7 +135,7 @@ export default function TierDashboard({ currentTier = 'free', userName = '' }) {
 
         {/* Locked Features */}
         {features.locked.length > 0 && (
-          <div style={{ background: '#161b22', border: '1px solid rgba(248,81,73,0.2)', borderRadius: 12, padding: 20 }}>
+          <div className="tier-dashboard-card tier-dashboard-card--locked">
             <div style={{ fontSize: 12, color: '#f85149', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Lock size={14} /> LOCKED FEATURES
             </div>
@@ -159,10 +153,7 @@ export default function TierDashboard({ currentTier = 'free', userName = '' }) {
 
         {/* Upgrade Options */}
         {upgrade && (
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.05))',
-            border: '1px solid rgba(212,175,55,0.4)', borderRadius: 12, padding: 20
-          }}>
+          <div className="tier-dashboard-card tier-dashboard-card--upgrade">
             <div style={{ fontSize: 12, color: '#d4af37', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Zap size={14} /> UPGRADE OPTIONS
             </div>
