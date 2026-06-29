@@ -63,7 +63,7 @@ function SubscriptionRequired({ title, user }) {
             Available Plans
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+          <div className="subscriptions-plans-grid">
             {plans.map((p) => {
               const isEnterprise = p.id === 'enterprise';
               return (

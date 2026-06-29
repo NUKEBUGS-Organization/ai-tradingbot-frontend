@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import api from '../services/api';
-import { Check, X, Key, ShoppingCart } from 'lucide-react';
+import { Check, X, Key, ShoppingCart, BarChart3, Settings2 } from 'lucide-react';
 
 const plans = [
   {
@@ -248,10 +248,45 @@ export default function Subscriptions() {
             </div>
           )}
 
+          <div className="card mb-24">
+            <div className="card-body subscription-vs-card">
+              <h3 className="subscription-vs-title">
+                Subscription vs License — What is the Difference?
+              </h3>
+              <p className="subscription-vs-subtitle">
+                Many customers ask this. Here is the simple explanation.
+              </p>
+              <div className="subscription-vs-grid">
+                <div className="subscription-vs-item">
+                  <div className="subscription-vs-icon gold">
+                    <BarChart3 size={22} />
+                  </div>
+                  <h4 className="subscription-vs-item-title gold">Subscription Plans</h4>
+                  <p className="subscription-vs-item-text">
+                    Monthly or annual access to the VCL4X analytics platform — AI signals,
+                    market intelligence, risk tools, and the trading dashboard. You learn and
+                    analyze; execution stays manual unless you add a license.
+                  </p>
+                </div>
+                <div className="subscription-vs-item">
+                  <div className="subscription-vs-icon blue">
+                    <Settings2 size={22} />
+                  </div>
+                  <h4 className="subscription-vs-item-title blue">Auto-Trading Licenses</h4>
+                  <p className="subscription-vs-item-text">
+                    Connect your own MT5 account to receive automated signal execution through
+                    the VCL4X EA. Requires an active subscription plus a separate license for
+                    each automation tier.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, color: '#e6edf3' }}>Subscription Plans</h2>
           <p style={{ fontSize: 14, color: '#8b949e', marginBottom: 24 }}>Choose the plan that fits your trading journey.</p>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 32 }}>
+          <div className="billing-toggle-row">
             <span style={{ color: !isAnnual ? '#d4af37' : '#8b949e', fontWeight: !isAnnual ? 700 : 400, fontSize: 15 }}>Monthly</span>
             <div
               onClick={() => setIsAnnual(!isAnnual)}
@@ -372,7 +407,7 @@ export default function Subscriptions() {
                 Why Traders Upgrade
               </h3>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24, marginBottom: 28 }}>
+              <div className="responsive-auto-grid mb-28">
                 <div>
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                     {upgradeProblems.map((problem) => (
@@ -391,7 +426,7 @@ export default function Subscriptions() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 8 }}>
+              <div className="responsive-auto-grid-sm">
                 {upgradeSteps.map((step, i) => (
                   <div
                     key={step}
@@ -419,7 +454,7 @@ export default function Subscriptions() {
             Your subscription gives you access to the ecosystem. Your license unlocks automation.
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 32 }}>
+          <div className="billing-toggle-row">
             <span style={{ color: !isAnnualLicense ? '#d4af37' : '#8b949e', fontWeight: !isAnnualLicense ? 700 : 400, fontSize: 15 }}>Standard</span>
             <div
               onClick={() => setIsAnnualLicense(!isAnnualLicense)}
