@@ -142,7 +142,7 @@ export default function SignalHistory() {
                   <tbody>
                     {filtered.map((s) => (
                       <tr key={s._id} onClick={() => setSelectedSignal(s)} style={{ cursor: 'pointer' }}>
-                        <td style={{ fontSize: 10, color: '#545d68' }}>{String(s._id).slice(-6)}</td>
+                        <td style={{ fontSize: 10, color: '#545d68' }}>{s._id ? s._id.toString().slice(-6).toUpperCase() : '—'}</td>
                         <td style={{ fontWeight: 600 }}>{s.symbol}</td>
                         <td>
                           <span className={`badge ${s.direction === 'BUY' ? 'badge-green' : 'badge-red'}`}>{s.direction}</span>
@@ -150,7 +150,7 @@ export default function SignalHistory() {
                         <td><MaskedSignalValue signal={s} value={s.entryPrice} /></td>
                         <td style={{ color: '#f85149' }}><MaskedSignalValue signal={s} value={s.stopLoss} color="#f85149" /></td>
                         <td style={{ color: '#3fb950' }}><MaskedSignalValue signal={s} value={s.takeProfit} color="#3fb950" /></td>
-                        <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.confidence} /> : `${s.confidence}%`}</td>
+                        <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.confidence} /> : (s.confidence ? `${s.confidence}%` : '—')}</td>
                         <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.grade} /> : <GradeBadge grade={s.grade} />}</td>
                         <td><SessionBadge session={s.session} /></td>
                         <td><span className="badge badge-gold">{s.status}</span></td>
