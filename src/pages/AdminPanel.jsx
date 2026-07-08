@@ -9,15 +9,36 @@ export default function AdminPanel() {
   const [data, setData] = useState(null);
   const [users, setUsers] = useState([]);
   const [usersMeta, setUsersMeta] = useState({ dbConnected: true, message: '' });
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastAudience, setBroadcastAudience] = useState('all');
   const [broadcastMsg, setBroadcastMsg] = useState('');
-  const [broadcastTarget, setBroadcastTarget] = useState('all');
-  const [broadcastSymbol, setBroadcastSymbol] = useState('XAUUSD');
-  const [minConfidence, setMinConfidence] = useState(75);
-  const [broadcasting, setBroadcasting] = useState(false);
-  const [broadcastResult, setBroadcastResult] = useState(null);
+  const [sendingBroadcast, setSendingBroadcast] = useState(false);
+  const [tradingConfidence, setTradingConfidence] = useState(45);
+  const [signalConfidence, setSignalConfidence] = useState(40);
+  const [updatingConfidence, setUpdatingConfidence] = useState(false);
+  const [confidenceMsg, setConfidenceMsg] = useState('');
+  const [engineStatus, setEngineStatus] = useState(null);
   const [tab, setTab] = useState('overview');
 
   useEffect(() => { loadData(); }, []);
+
+  useEffect(() => {
+    const loadEngineStatus = async () => {
+      try {
+        const status = await api.getEngineStatus();
+        setEngineStatus(status);
+        if (status?.auto_trade?.trading_min_confidence) {
+          setTradingConfidence(status.auto_trade.trading_min_confidence);
+        }
+        if (status?.auto_trade?.signal_min_confidence) {
+          setSignalConfidence(status.auto_trade.signal_min_confidence);
+        }
+      } catch (err) {
+        console.error('Failed to load engine status:', err);
+      }
+    };
+    loadEngineStatus();
+  }, []);
 
   const loadData = async () => {
     try {
@@ -37,26 +58,46 @@ export default function AdminPanel() {
     try { await api.toggleUser(id); loadData(); } catch (err) { console.error(err); }
   };
 
-  const sendBroadcast = async () => {
-    if (!broadcastMsg.trim()) return;
+  const handleSendBroadcast = async () => {
+    if (!broadcastMessage.trim()) return;
+    setSendingBroadcast(true);
+    setBroadcastMsg('');
     try {
-      await api.broadcast(broadcastMsg, broadcastTarget);
-      setBroadcastMsg('');
-      alert('Broadcast sent successfully!');
-    } catch (err) { console.error(err); }
+      await api.sendTelegramBroadcast({
+        message: broadcastMessage,
+        audience: broadcastAudience,
+      });
+      setBroadcastMsg('✅ Message sent to Telegram successfully');
+      setBroadcastMessage('');
+    } catch (err) {
+      setBroadcastMsg(`❌ Failed to send: ${err.message}`);
+    } finally {
+      setSendingBroadcast(false);
+    }
   };
 
-  const handleBroadcast = async (isTest = false) => {
-    setBroadcasting(true);
-    setBroadcastResult(null);
+  const handleUpdateConfidence = async () => {
+    setUpdatingConfidence(true);
+    setConfidenceMsg('');
     try {
-      const result = await api.adminBroadcastSignal(broadcastSymbol, minConfidence, isTest);
-      setBroadcastResult(result);
+      await api.updateEngineConfidence({
+        trading_min_confidence: tradingConfidence,
+        signal_min_confidence: signalConfidence,
+      });
+      setConfidenceMsg('✅ Confidence thresholds updated successfully');
+      const status = await api.getEngineStatus();
+      setEngineStatus(status);
     } catch (err) {
-      setBroadcastResult({ success: false, reason: err.message });
+      setConfidenceMsg(`❌ Failed to update: ${err.message}`);
     } finally {
-      setBroadcasting(false);
+      setUpdatingConfidence(false);
     }
+  };
+
+  const handleResetConfidence = async () => {
+    setTradingConfidence(45);
+    setSignalConfidence(40);
+    setConfidenceMsg('Reset to defaults. Click Apply to save.');
   };
 
   const planData = data ? [
@@ -206,95 +247,130 @@ export default function AdminPanel() {
             <>
             <div className="card" style={{ marginBottom: 24 }}>
               <div className="card-header">
-                <span className="card-title">📡 Signal Broadcasting</span>
-                <span className="badge badge-gold">Admin Only</span>
+                <span className="card-title">⚙️ Engine Configuration</span>
+                <span className="badge badge-gold">ADMIN ONLY</span>
               </div>
               <div className="card-body">
-                <p style={{ fontSize: 13, color: '#8b949e', marginBottom: 16 }}>
-                  Manually trigger AI analysis and broadcast high-confidence signals to Telegram.
-                  Only signals meeting the minimum confidence threshold will be sent.
+                <p style={{ fontSize: 13, color: '#8b949e', marginBottom: 24 }}>
+                  Override engine confidence thresholds. These values take effect immediately
+                  without redeploying. Restart engine to revert to environment defaults.
                 </p>
 
-                <div className="responsive-grid-2" style={{ marginBottom: 16 }}>
-                  <div>
-                    <label style={{ fontSize: 12, color: '#8b949e', display: 'block', marginBottom: 6 }}>Symbol</label>
-                    <select
-                      value={broadcastSymbol}
-                      onChange={e => setBroadcastSymbol(e.target.value)}
-                      style={{ width: '100%', background: '#0d1117', border: '1px solid #30363d', borderRadius: 6, padding: '8px 12px', color: '#e6edf3', fontSize: 13 }}
-                    >
-                      <option value="XAUUSD">XAUUSD (Gold)</option>
-                      <option value="EURUSD">EURUSD</option>
-                      <option value="GBPUSD">GBPUSD</option>
-                    </select>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+                  <div style={{ background: '#0d1117', borderRadius: 8, padding: 20, border: '1px solid #30363d' }}>
+                    <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 8 }}>
+                      TRADING MIN CONFIDENCE
+                    </div>
+                    <div style={{ fontSize: 11, color: '#545d68', marginBottom: 16, lineHeight: 1.6 }}>
+                      Minimum confidence % required to generate a TRADE signal.
+                      Lower = more trades, higher = more selective.
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                      <input
+                        type="range"
+                        min="30" max="90" step="5"
+                        value={tradingConfidence}
+                        onChange={(e) => setTradingConfidence(Number(e.target.value))}
+                        style={{ flex: 1, accentColor: '#d4af37' }}
+                      />
+                      <span style={{
+                        fontSize: 20, fontWeight: 800, color: '#d4af37',
+                        minWidth: 48, textAlign: 'right',
+                      }}>
+                        {tradingConfidence}%
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#545d68' }}>
+                      <span>30% (More trades)</span>
+                      <span>90% (Most selective)</span>
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ fontSize: 12, color: '#8b949e', display: 'block', marginBottom: 6 }}>
-                      Min Confidence: {minConfidence}%
-                    </label>
-                    <input
-                      type="range"
-                      min="65"
-                      max="95"
-                      value={minConfidence}
-                      onChange={e => setMinConfidence(Number(e.target.value))}
-                      style={{ width: '100%', accentColor: '#d4af37' }}
-                    />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#545d68' }}>
-                      <span>65% (Min)</span>
-                      <span>95% (Max)</span>
+
+                  <div style={{ background: '#0d1117', borderRadius: 8, padding: 20, border: '1px solid #30363d' }}>
+                    <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 8 }}>
+                      SIGNAL MIN CONFIDENCE
+                    </div>
+                    <div style={{ fontSize: 11, color: '#545d68', marginBottom: 16, lineHeight: 1.6 }}>
+                      Minimum confidence % required to send signal to Telegram and dashboard.
+                      Must be lower than or equal to Trading Min Confidence.
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                      <input
+                        type="range"
+                        min="30" max="90" step="5"
+                        value={signalConfidence}
+                        onChange={(e) => setSignalConfidence(Number(e.target.value))}
+                        style={{ flex: 1, accentColor: '#58a6ff' }}
+                      />
+                      <span style={{
+                        fontSize: 20, fontWeight: 800, color: '#58a6ff',
+                        minWidth: 48, textAlign: 'right',
+                      }}>
+                        {signalConfidence}%
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#545d68' }}>
+                      <span>30% (Send more)</span>
+                      <span>90% (Send fewer)</span>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                <div style={{
+                  background: '#161b22', borderRadius: 8, padding: 12,
+                  border: '1px solid #30363d', marginBottom: 16,
+                  display: 'flex', gap: 24, flexWrap: 'wrap',
+                }}>
+                  <div style={{ fontSize: 12 }}>
+                    <span style={{ color: '#545d68' }}>Current engine trading threshold: </span>
+                    <span style={{ color: '#d4af37', fontWeight: 700 }}>{engineStatus?.auto_trade?.trading_min_confidence ?? '—'}%</span>
+                  </div>
+                  <div style={{ fontSize: 12 }}>
+                    <span style={{ color: '#545d68' }}>Current engine signal threshold: </span>
+                    <span style={{ color: '#58a6ff', fontWeight: 700 }}>{engineStatus?.auto_trade?.signal_min_confidence ?? '—'}%</span>
+                  </div>
+                  <div style={{ fontSize: 12 }}>
+                    <span style={{ color: '#545d68' }}>Env default trading: </span>
+                    <span style={{ color: '#8b949e' }}>45%</span>
+                  </div>
+                  <div style={{ fontSize: 12 }}>
+                    <span style={{ color: '#545d68' }}>Env default signal: </span>
+                    <span style={{ color: '#8b949e' }}>40%</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12 }}>
                   <button
-                    onClick={() => handleBroadcast(false)}
-                    disabled={broadcasting}
-                    className="btn btn-primary"
-                    style={{ flex: 1 }}
+                    onClick={handleUpdateConfidence}
+                    disabled={updatingConfidence}
+                    style={{
+                      background: 'linear-gradient(135deg, #d4af37, #f0c040)',
+                      color: '#0a0a0f', border: 'none', borderRadius: 8,
+                      padding: '10px 24px', fontSize: 13, fontWeight: 700,
+                      cursor: updatingConfidence ? 'not-allowed' : 'pointer',
+                      opacity: updatingConfidence ? 0.7 : 1,
+                    }}
                   >
-                    {broadcasting ? 'Analyzing...' : '📡 Analyze & Broadcast'}
+                    {updatingConfidence ? 'Updating...' : '⚡ Apply to Engine'}
                   </button>
                   <button
-                    onClick={() => handleBroadcast(true)}
-                    disabled={broadcasting}
-                    className="btn btn-secondary"
-                    style={{ flex: 1 }}
+                    onClick={handleResetConfidence}
+                    style={{
+                      background: 'transparent', color: '#8b949e',
+                      border: '1px solid #30363d', borderRadius: 8,
+                      padding: '10px 24px', fontSize: 13, cursor: 'pointer',
+                    }}
                   >
-                    {broadcasting ? 'Sending...' : '🧪 Send Test Signal'}
+                    Reset to Defaults
                   </button>
                 </div>
 
-                {broadcastResult && (
+                {confidenceMsg && (
                   <div style={{
-                    padding: 12,
-                    borderRadius: 8,
-                    background: broadcastResult.success ? 'rgba(63,185,80,0.1)' : 'rgba(248,81,73,0.1)',
-                    border: `1px solid ${broadcastResult.success ? '#3fb950' : '#f85149'}`,
-                    fontSize: 13
+                    marginTop: 12, fontSize: 12,
+                    color: confidenceMsg.includes('✅') ? '#3fb950' : '#f85149',
                   }}>
-                    {broadcastResult.success ? (
-                      <div>
-                        <div style={{ color: '#3fb950', fontWeight: 700, marginBottom: 4 }}>
-                          ✅ {broadcastResult.test ? 'Test signal sent!' : 'Signal broadcast successfully!'}
-                        </div>
-                        {broadcastResult.signal && (
-                          <div style={{ color: '#8b949e' }}>
-                            {broadcastResult.signal.direction} {broadcastResult.signal.symbol} —
-                            Confidence: {broadcastResult.signal.confidence}% ({broadcastResult.signal.grade}) —
-                            Sent to: {broadcastResult.sent_to} recipients
-                          </div>
-                        )}
-                        {broadcastResult.test && (
-                          <div style={{ color: '#8b949e' }}>Sent to {broadcastResult.sent_to} recipients</div>
-                        )}
-                      </div>
-                    ) : (
-                      <div style={{ color: '#f85149' }}>
-                        ❌ {broadcastResult.reason || 'Broadcast failed'}
-                      </div>
-                    )}
+                    {confidenceMsg}
                   </div>
                 )}
               </div>
@@ -304,19 +380,28 @@ export default function AdminPanel() {
               <div className="card-body">
                 <div className="form-group">
                   <label className="form-label">Target Audience</label>
-                  <select className="form-input" value={broadcastTarget} onChange={e => setBroadcastTarget(e.target.value)}>
-                    <option value="all">All Users</option>
-                    <option value="starter">Starter Plan</option>
-                    <option value="professional">Professional Plan</option>
-                    <option value="enterprise">Enterprise Plan</option>
+                  <select className="form-input" value={broadcastAudience} onChange={e => setBroadcastAudience(e.target.value)}>
+                    <option value="all">All Subscribers</option>
+                    <option value="premium">Premium Users Only</option>
+                    <option value="free">Free Users Only</option>
                   </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Message</label>
                   <textarea className="form-input" rows={5} placeholder="Type your broadcast message..."
-                    value={broadcastMsg} onChange={e => setBroadcastMsg(e.target.value)} style={{ resize: 'vertical' }} />
+                    value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} style={{ resize: 'vertical' }} />
                 </div>
-                <button className="btn btn-primary" onClick={sendBroadcast}><Send size={14} /> Send Broadcast</button>
+                <button className="btn btn-primary" onClick={handleSendBroadcast} disabled={sendingBroadcast}>
+                  <Send size={14} /> {sendingBroadcast ? 'Sending...' : 'Send Broadcast'}
+                </button>
+                {broadcastMsg && (
+                  <div style={{
+                    marginTop: 12, fontSize: 12,
+                    color: broadcastMsg.includes('✅') ? '#3fb950' : '#f85149',
+                  }}>
+                    {broadcastMsg}
+                  </div>
+                )}
               </div>
             </div>
             </>

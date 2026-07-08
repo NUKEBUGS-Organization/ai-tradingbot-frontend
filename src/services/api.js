@@ -474,6 +474,20 @@ export const api = {
     });
   },
 
+  updateEngineConfidence: async (data) => {
+    return protectedFetch(`${API_BASE}/engine/confidence`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  sendTelegramBroadcast: async (data) => {
+    return protectedFetch(`${API_BASE}/engine/telegram/broadcast`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   // —— Subscriptions ——
   getPlans: async () => {
     return protectedFetch(`${API_BASE}/subscriptions/plans`, {}, []);
