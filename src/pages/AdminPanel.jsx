@@ -18,6 +18,10 @@ export default function AdminPanel() {
   const [updatingConfidence, setUpdatingConfidence] = useState(false);
   const [confidenceMsg, setConfidenceMsg] = useState('');
   const [engineStatus, setEngineStatus] = useState(null);
+  const [broadcastSymbol, setBroadcastSymbol] = useState('XAUUSD');
+  const [broadcastMinConfidence, setBroadcastMinConfidence] = useState(75);
+  const [broadcastingSignal, setBroadcastingSignal] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState(null);
   const [tab, setTab] = useState('overview');
 
   useEffect(() => { loadData(); }, []);
@@ -100,6 +104,19 @@ export default function AdminPanel() {
     setConfidenceMsg('Reset to defaults. Click Apply to save.');
   };
 
+  const handleBroadcast = async (isTest = false) => {
+    setBroadcastingSignal(true);
+    setBroadcastResult(null);
+    try {
+      const result = await api.adminBroadcastSignal(broadcastSymbol, broadcastMinConfidence, isTest);
+      setBroadcastResult(result);
+    } catch (err) {
+      setBroadcastResult({ success: false, reason: err.message });
+    } finally {
+      setBroadcastingSignal(false);
+    }
+  };
+
   const planData = data ? [
     { name: 'Free', value: data.subscriptions.distribution.free || 0, color: '#545d68' },
     { name: 'Discovery', value: data.subscriptions.distribution.discovery || 0, color: '#3fb950' },
@@ -121,7 +138,7 @@ export default function AdminPanel() {
       <Sidebar />
       <main className="main-content">
         <Header title="Admin Panel" />
-        <div className="page-content">
+        <div className="page-content admin-page">
           <div className="tabs tabs-scroll">
             <button className={`tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>Overview</button>
             <button className={`tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>Users</button>
@@ -244,8 +261,8 @@ export default function AdminPanel() {
           )}
 
           {tab === 'broadcast' && (
-            <>
-            <div className="card" style={{ marginBottom: 24 }}>
+            <div className="admin-broadcast-stack">
+            <div className="card">
               <div className="card-header">
                 <span className="card-title">⚙️ Engine Configuration</span>
                 <span className="badge badge-gold">ADMIN ONLY</span>
@@ -256,8 +273,8 @@ export default function AdminPanel() {
                   without redeploying. Restart engine to revert to environment defaults.
                 </p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
-                  <div style={{ background: '#0d1117', borderRadius: 8, padding: 20, border: '1px solid #30363d' }}>
+                <div className="admin-confidence-grid">
+                  <div className="admin-confidence-panel">
                     <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 8 }}>
                       TRADING MIN CONFIDENCE
                     </div>
@@ -265,18 +282,15 @@ export default function AdminPanel() {
                       Minimum confidence % required to generate a TRADE signal.
                       Lower = more trades, higher = more selective.
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                    <div className="admin-confidence-slider-row">
                       <input
                         type="range"
                         min="30" max="90" step="5"
                         value={tradingConfidence}
                         onChange={(e) => setTradingConfidence(Number(e.target.value))}
-                        style={{ flex: 1, accentColor: '#d4af37' }}
+                        style={{ accentColor: '#d4af37' }}
                       />
-                      <span style={{
-                        fontSize: 20, fontWeight: 800, color: '#d4af37',
-                        minWidth: 48, textAlign: 'right',
-                      }}>
+                      <span className="admin-confidence-value" style={{ color: '#d4af37' }}>
                         {tradingConfidence}%
                       </span>
                     </div>
@@ -286,7 +300,7 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  <div style={{ background: '#0d1117', borderRadius: 8, padding: 20, border: '1px solid #30363d' }}>
+                  <div className="admin-confidence-panel">
                     <div style={{ fontSize: 12, color: '#8b949e', marginBottom: 8 }}>
                       SIGNAL MIN CONFIDENCE
                     </div>
@@ -294,18 +308,15 @@ export default function AdminPanel() {
                       Minimum confidence % required to send signal to Telegram and dashboard.
                       Must be lower than or equal to Trading Min Confidence.
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                    <div className="admin-confidence-slider-row">
                       <input
                         type="range"
                         min="30" max="90" step="5"
                         value={signalConfidence}
                         onChange={(e) => setSignalConfidence(Number(e.target.value))}
-                        style={{ flex: 1, accentColor: '#58a6ff' }}
+                        style={{ accentColor: '#58a6ff' }}
                       />
-                      <span style={{
-                        fontSize: 20, fontWeight: 800, color: '#58a6ff',
-                        minWidth: 48, textAlign: 'right',
-                      }}>
+                      <span className="admin-confidence-value" style={{ color: '#58a6ff' }}>
                         {signalConfidence}%
                       </span>
                     </div>
@@ -316,11 +327,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div style={{
-                  background: '#161b22', borderRadius: 8, padding: 12,
-                  border: '1px solid #30363d', marginBottom: 16,
-                  display: 'flex', gap: 24, flexWrap: 'wrap',
-                }}>
+                <div className="admin-engine-status-row">
                   <div style={{ fontSize: 12 }}>
                     <span style={{ color: '#545d68' }}>Current engine trading threshold: </span>
                     <span style={{ color: '#d4af37', fontWeight: 700 }}>{engineStatus?.auto_trade?.trading_min_confidence ?? '—'}%</span>
@@ -339,27 +346,19 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 12 }}>
+                <div className="admin-action-row">
                   <button
+                    type="button"
                     onClick={handleUpdateConfidence}
                     disabled={updatingConfidence}
-                    style={{
-                      background: 'linear-gradient(135deg, #d4af37, #f0c040)',
-                      color: '#0a0a0f', border: 'none', borderRadius: 8,
-                      padding: '10px 24px', fontSize: 13, fontWeight: 700,
-                      cursor: updatingConfidence ? 'not-allowed' : 'pointer',
-                      opacity: updatingConfidence ? 0.7 : 1,
-                    }}
+                    className="btn-apply-confidence"
                   >
                     {updatingConfidence ? 'Updating...' : '⚡ Apply to Engine'}
                   </button>
                   <button
+                    type="button"
                     onClick={handleResetConfidence}
-                    style={{
-                      background: 'transparent', color: '#8b949e',
-                      border: '1px solid #30363d', borderRadius: 8,
-                      padding: '10px 24px', fontSize: 13, cursor: 'pointer',
-                    }}
+                    className="btn-reset-confidence"
                   >
                     Reset to Defaults
                   </button>
@@ -375,7 +374,108 @@ export default function AdminPanel() {
                 )}
               </div>
             </div>
-            <div className="card" style={{ maxWidth: 600 }}>
+
+            <div className="admin-broadcast-grid">
+            <div className="card">
+              <div className="card-header">
+                <span className="card-title"><Radio size={16} /> Signal Broadcasting</span>
+                <span className="badge badge-gold">Admin Only</span>
+              </div>
+              <div className="card-body">
+                <p style={{ fontSize: 13, color: '#8b949e', marginBottom: 16 }}>
+                  Manually trigger AI analysis and broadcast high-confidence signals to Telegram.
+                  Only signals meeting the minimum confidence threshold will be sent.
+                </p>
+
+                <div className="responsive-grid-2" style={{ marginBottom: 16 }}>
+                  <div>
+                    <label className="form-label">Symbol</label>
+                    <select
+                      className="form-input"
+                      value={broadcastSymbol}
+                      onChange={(e) => setBroadcastSymbol(e.target.value)}
+                    >
+                      <option value="XAUUSD">XAUUSD (Gold)</option>
+                      <option value="EURUSD">EURUSD</option>
+                      <option value="GBPUSD">GBPUSD</option>
+                      <option value="USDJPY">USDJPY</option>
+                      <option value="GBPJPY">GBPJPY</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="form-label">
+                      Min Confidence: {broadcastMinConfidence}%
+                    </label>
+                    <input
+                      type="range"
+                      min="65"
+                      max="95"
+                      value={broadcastMinConfidence}
+                      onChange={(e) => setBroadcastMinConfidence(Number(e.target.value))}
+                      style={{ width: '100%', accentColor: '#d4af37' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#545d68' }}>
+                      <span>65% (Min)</span>
+                      <span>95% (Max)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="admin-broadcast-actions">
+                  <button
+                    type="button"
+                    onClick={() => handleBroadcast(false)}
+                    disabled={broadcastingSignal}
+                    className="btn btn-primary"
+                  >
+                    {broadcastingSignal ? 'Analyzing...' : '📡 Analyze & Broadcast'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleBroadcast(true)}
+                    disabled={broadcastingSignal}
+                    className="btn btn-secondary"
+                  >
+                    {broadcastingSignal ? 'Sending...' : '🧪 Send Test Signal'}
+                  </button>
+                </div>
+
+                {broadcastResult && (
+                  <div style={{
+                    marginTop: 16,
+                    padding: 12,
+                    borderRadius: 8,
+                    background: broadcastResult.success ? 'rgba(63,185,80,0.1)' : 'rgba(248,81,73,0.1)',
+                    border: `1px solid ${broadcastResult.success ? '#3fb950' : '#f85149'}`,
+                    fontSize: 13,
+                  }}>
+                    {broadcastResult.success ? (
+                      <div>
+                        <div style={{ color: '#3fb950', fontWeight: 700, marginBottom: 4 }}>
+                          ✅ {broadcastResult.test ? 'Test signal sent!' : 'Signal broadcast successfully!'}
+                        </div>
+                        {broadcastResult.signal && (
+                          <div style={{ color: '#8b949e' }}>
+                            {broadcastResult.signal.direction} {broadcastResult.signal.symbol} —
+                            Confidence: {broadcastResult.signal.confidence}% ({broadcastResult.signal.grade}) —
+                            Sent to: {broadcastResult.sent_to} recipients
+                          </div>
+                        )}
+                        {broadcastResult.test && !broadcastResult.signal && (
+                          <div style={{ color: '#8b949e' }}>Sent to {broadcastResult.sent_to} recipients</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ color: '#f85149' }}>
+                        ❌ {broadcastResult.reason || 'Broadcast failed'}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="card">
               <div className="card-header"><span className="card-title"><Send size={16} /> Broadcast Message</span></div>
               <div className="card-body">
                 <div className="form-group">
@@ -391,7 +491,7 @@ export default function AdminPanel() {
                   <textarea className="form-input" rows={5} placeholder="Type your broadcast message..."
                     value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} style={{ resize: 'vertical' }} />
                 </div>
-                <button className="btn btn-primary" onClick={handleSendBroadcast} disabled={sendingBroadcast}>
+                <button type="button" className="btn btn-primary" onClick={handleSendBroadcast} disabled={sendingBroadcast}>
                   <Send size={14} /> {sendingBroadcast ? 'Sending...' : 'Send Broadcast'}
                 </button>
                 {broadcastMsg && (
@@ -404,7 +504,8 @@ export default function AdminPanel() {
                 )}
               </div>
             </div>
-            </>
+            </div>
+            </div>
           )}
 
           {tab === 'health' && (
