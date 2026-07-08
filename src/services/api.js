@@ -275,10 +275,9 @@ export const api = {
   },
 
   // —— Signals ——
-  getSignals: async () => {
-    const result = await protectedFetch(`${API_BASE}/signals`);
-    if (Array.isArray(result)) return result;
-    return [];
+  getSignals: async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return protectedFetch(`${API_BASE}/signals/history${query ? `?${query}` : ''}`);
   },
 
   getEngineActiveSignals: async () => {
@@ -287,8 +286,9 @@ export const api = {
   },
 
   getSignalHistory: async () => {
-    const result = await protectedFetch(`${API_BASE}/signals/history`, {}, []);
-    return Array.isArray(result) ? result : [];
+    const result = await protectedFetch(`${API_BASE}/signals/history`, {}, { signals: [] });
+    if (Array.isArray(result)) return result;
+    return result?.signals || [];
   },
 
   getMarketAnalysis: async () => {
@@ -358,7 +358,7 @@ export const api = {
 
   /** Use GET /api/signals — not /api/engine/signals */
   getEngineSignals: async () => {
-    const data = await api.getSignals();
+    const data = await protectedFetch(`${API_BASE}/signals`);
     return normalizeSignalsResponse(data);
   },
 

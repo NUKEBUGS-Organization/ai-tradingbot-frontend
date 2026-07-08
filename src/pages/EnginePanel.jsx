@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import LockedFeature from '../components/LockedFeature';
 import { useAuth, getUserTier } from '../context/AuthContext';
 import api from '../services/api';
-import { normalizeSignalsList, pickMt5LiveAccount, hasLiveMt5Connection, mapRiskSettingsForUi } from '../utils/tradeMetrics';
+import { pickMt5LiveAccount, hasLiveMt5Connection, mapRiskSettingsForUi } from '../utils/tradeMetrics';
 import { useWebSocket } from '../services/websocket';
 import { Cpu, Activity, Wifi, WifiOff, Zap, Shield, RefreshCw, AlertTriangle, Play, BarChart3 } from 'lucide-react';
 import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalValue';
@@ -51,7 +51,7 @@ export default function EnginePanel() {
       const live = pickMt5LiveAccount(eng, wsAccount);
       const [risk, sigList, aiTrades, atStatus] = await Promise.all([
         api.getEngineRisk(userId, profile, eng),
-        api.getSignals(),
+        api.getEngineSignals(),
         api.getEngineTrades(),
         api.getAutoTradeStatus(),
       ]);
@@ -64,7 +64,7 @@ export default function EnginePanel() {
         if (prev?.fromMt5) return { ...prev, ...risk, balance: prev.balance, equity: prev.equity, daily_pnl: prev.daily_pnl, open_positions: prev.open_positions, fromMt5: true };
         return risk;
       });
-      setSignals(normalizeSignalsList(sigList));
+      setSignals(sigList);
       setEngineTrades(aiTrades);
     } catch (err) {
       console.error(err);
