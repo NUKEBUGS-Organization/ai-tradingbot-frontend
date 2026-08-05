@@ -1,75 +1,103 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import LockedFeature from '../components/LockedFeature';
 import { useAuth, getUserTier } from '../context/AuthContext';
+import { useWebSocket } from '../services/websocket';
 import api from '../services/api';
-import { Brain, TrendingUp, Activity, Gauge, Clock, BarChart3, Zap, Eye } from 'lucide-react';
+import { Brain, TrendingUp, TrendingDown, Minus, Activity, Gauge, Clock, BarChart3, Zap, Eye } from 'lucide-react';
 import SignalDetailModal from '../components/SignalDetailModal';
 import { GradeBadge, SessionBadge, AmdPhaseBadge, H4BiasIndicator, RiskBadge } from '../components/signalBadges';
 import { displayProductName } from '../utils/product';
 import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalValue';
+import { formatMarketBias, formatMarketPhase, formatSession } from '../utils/signalDisplay';
+import {
+  outcomeLabel,
+  outcomeBadgeClass,
+  isFreshAlert,
+  normalizeSignalStatus,
+} from '../utils/signalOutcome';
 
 export default function AISignals() {
   const { user } = useAuth();
   const userTier = getUserTier(user);
+  const { signals: liveSignals } = useWebSocket();
   const [signals, setSignals] = useState([]);
-  const [recentSignals, setRecentSignals] = useState([]);
+  const [signalStats, setSignalStats] = useState({ wins: 0, losses: 0, pending: 0, total: 0, win_rate: 0 });
   const [analysis, setAnalysis] = useState(null);
   const [selectedSignal, setSelectedSignal] = useState(null);
 
-  const fetchRecentSignals = useCallback(async () => {
-    try {
-      const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-      const response = await api.getSignals({
-        since: thirtyMinsAgo,
-        limit: 20,
-      });
-      setRecentSignals(response.signals || response || []);
-    } catch (err) {
-      console.error('Failed to fetch recent signals:', err);
-      setRecentSignals([]);
-    }
-  }, []);
-
-  useEffect(() => { loadData(); }, []);
-
   useEffect(() => {
-    fetchRecentSignals();
-    const interval = setInterval(fetchRecentSignals, 30000);
+    loadData();
+    const interval = setInterval(loadData, 15000);
     return () => clearInterval(interval);
-  }, [fetchRecentSignals]);
+  }, []);
 
   const loadData = async () => {
     try {
-      const [engineData, engineS, a] = await Promise.all([
-        api.getEngineSignals().catch(() => ({ history: [] })),
-        api.getEngineActiveSignals().catch(() => []),
+      const [s, engineRes, a] = await Promise.all([
+        api.getSignals(),
+        api.getEngineActiveSignals().catch(() => ({ signals: [], stats: {} })),
         api.getMarketAnalysis(),
       ]);
-      const dbSignals = engineData?.history || engineData?.active || [];
-      const bySymbol = new Map();
+      const engineS = Array.isArray(engineRes) ? engineRes : (engineRes?.signals || []);
+      const stats = (!Array.isArray(engineRes) && engineRes?.stats) || {};
+      const byKey = new Map();
       const add = (row) => {
         if (!row?.symbol) return;
         const sym = String(row.symbol).toUpperCase();
+        const st = normalizeSignalStatus(row.status);
+        const key = st === 'active' ? `active:${sym}` : `${st}:${row.id || row._id || sym}:${row.timestamp || row.createdAt || ''}`;
         const t = new Date(row.createdAt || row.timestamp || 0).getTime();
-        const prev = bySymbol.get(sym);
+        const prev = byKey.get(key);
         const prevT = prev ? new Date(prev.createdAt || prev.timestamp || 0).getTime() : 0;
-        if (!prev || t >= prevT) bySymbol.set(sym, row);
+        if (!prev || t >= prevT) byKey.set(key, { ...row, status: st });
       };
-      (Array.isArray(engineS) ? engineS : []).forEach(add);
-      (Array.isArray(dbSignals) ? dbSignals : []).forEach(add);
-      setSignals([...bySymbol.values()].sort(
+      engineS.forEach(add);
+      (Array.isArray(s) ? s : []).forEach(add);
+      setSignals([...byKey.values()].sort(
         (x, y) => new Date(y.createdAt || y.timestamp || 0) - new Date(x.createdAt || x.timestamp || 0)
       ));
+      if (stats && (stats.wins != null || stats.total != null)) {
+        setSignalStats({
+          wins: Number(stats.wins) || 0,
+          losses: Number(stats.losses) || 0,
+          pending: Number(stats.pending) || 0,
+          total: Number(stats.total) || 0,
+          win_rate: Number(stats.win_rate) || 0,
+        });
+      } else {
+        const rows = [...byKey.values()];
+        const wins = rows.filter((r) => normalizeSignalStatus(r.status) === 'win').length;
+        const losses = rows.filter((r) => normalizeSignalStatus(r.status) === 'loss').length;
+        const pending = rows.filter((r) => normalizeSignalStatus(r.status) === 'active').length;
+        const closed = wins + losses;
+        setSignalStats({
+          wins,
+          losses,
+          pending,
+          total: rows.length,
+          win_rate: closed ? Math.round((wins / closed) * 1000) / 10 : 0,
+        });
+      }
       setAnalysis(a);
     } catch (err) { console.error(err); }
   };
 
   const biasColor = { bullish: '#3fb950', bearish: '#f85149', neutral: '#8b949e', ranging: '#d4af37' };
   const volColor = { low: '#3fb950', medium: '#d4af37', high: '#f0883e', extreme: '#f85149' };
+  const dirIcon = { BUY: <TrendingUp size={14} />, SELL: <TrendingDown size={14} />, NEUTRAL: <Minus size={14} /> };
+
+  const flashAlerts = useMemo(
+    () => (liveSignals || []).filter((s) => isFreshAlert(s, 2 * 60 * 1000)).slice(0, 10),
+    [liveSignals]
+  );
 
   const validSignals = signals.filter((s) => s.symbol && s.direction);
+  const closed = signalStats.wins + signalStats.losses;
+  const successRate = closed > 0
+    ? signalStats.win_rate
+    : (typeof analysis?.successRate === 'number' ? analysis.successRate : null);
 
   return (
     <div className="app-layout">
@@ -77,7 +105,6 @@ export default function AISignals() {
       <main className="main-content">
         <Header title="AI Signal Monitor" />
         <div className="page-content">
-          {/* Market Overview */}
           {analysis && (
             <div className="stats-grid signals-market-grid">
               <div className="stat-card">
@@ -106,21 +133,19 @@ export default function AISignals() {
               <div className="stat-card">
                 <div className="stat-card-header"><span className="stat-card-label">Success Rate</span><div className="stat-card-icon green"><Eye size={16} /></div></div>
                 <div className="stat-card-value positive">
-                  {analysis?.successRate ?? 'N/A'}
-                  {typeof analysis?.successRate === 'number' ? '%' : ''}
+                  {successRate != null ? `${successRate}%` : 'N/A'}
                 </div>
               </div>
             </div>
           )}
 
           <div className="grid-2 signals-indicators-grid">
-            {/* Indicators */}
             {analysis && (
               <div className="card">
                 <div className="card-header"><span className="card-title"><BarChart3 size={16} /> Technical Indicators</span></div>
                 <div className="card-body">
                   {[
-                    { label: 'RSI (14)', value: analysis.indicators.rsi, display: analysis.indicators.rsi?.toFixed(1), barPct: analysis.indicators.rsi, color: analysis.indicators.rsi > 70 ? '#f85149' : analysis.indicators.rsi < 30 ? '#3fb950' : '#d4af37' },
+                    { label: 'RSI (14)', value: analysis.indicators.rsi, display: analysis.indicators.rsi?.toFixed(1), color: analysis.indicators.rsi > 70 ? '#f85149' : analysis.indicators.rsi < 30 ? '#3fb950' : '#d4af37' },
                     { label: 'MACD', value: analysis.indicators.macd, display: analysis.indicators.macd, color: analysis.indicators.macd === 'bullish' ? '#3fb950' : analysis.indicators.macd === 'bearish' ? '#f85149' : '#8b949e' },
                     { label: 'EMA Trend', value: analysis.indicators.ema, display: analysis.indicators.ema, color: analysis.indicators.ema === 'bullish' ? '#3fb950' : analysis.indicators.ema === 'bearish' ? '#f85149' : '#8b949e' },
                     { label: 'ATR', value: analysis.indicators.atr, display: analysis.indicators.atr?.toFixed(1), color: '#58a6ff' },
@@ -135,129 +160,113 @@ export default function AISignals() {
               </div>
             )}
 
-            {/* Live Alerts */}
-            <div className="card" style={{ height: '100%' }}>
+            <div className="card">
               <div className="card-header">
-                <span className="card-title">
-                  <span style={{
-                    width: 8, height: 8, borderRadius: '50%',
-                    background: '#3fb950', display: 'inline-block',
-                    marginRight: 8, animation: 'pulse 2s infinite',
-                  }} />
-                  Live Signal Feed
-                </span>
-                <span style={{ fontSize: 11, color: '#8b949e' }}>Last 30 minutes</span>
+                <span className="card-title"><Zap size={16} /> Live Signal Feed</span>
+                <span className="badge badge-gold">{flashAlerts.length} new</span>
               </div>
-              <div style={{ padding: '12px', overflowY: 'auto', maxHeight: 400 }}>
-                {recentSignals.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: 32, color: '#8b949e' }}>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>📡</div>
-                    <div style={{ fontSize: 13, marginBottom: 4 }}>No signals in the last 30 minutes</div>
-                    <div style={{ fontSize: 11, color: '#545d68' }}>
-                      Engine analyzes every 90 seconds during London and NY sessions
+              <div style={{ padding: '0 16px 8px', fontSize: 11, color: '#545d68' }}>
+                New alerts only (last 2 min). Full book + outcomes below.
+              </div>
+              <div className="card-body" style={{ maxHeight: 340, overflowY: 'auto' }}>
+                {flashAlerts.length > 0 ? flashAlerts.map((s, i) => (
+                  <div key={i} className="animate-in" style={{ padding: 12, marginBottom: 8, background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ color: s.direction === 'BUY' ? '#3fb950' : '#f85149' }}>{dirIcon[s.direction]}</span>
+                        <span style={{ fontWeight: 700, fontSize: 13 }}>{s.symbol}</span>
+                        <span className={`badge ${s.direction === 'BUY' ? 'badge-green' : 'badge-red'}`}>{s.direction}</span>
+                      </div>
+                      <span style={{ fontSize: 10, color: '#545d68' }}>{displayProductName(s.strategy)}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 11, color: '#8b949e' }}>
+                      <span>Session: <strong style={{ color: '#e6edf3' }}>{formatSession(s.session)}</strong></span>
+                      <span>AI Market Phase: <strong style={{ color: '#e6edf3' }}>{formatMarketPhase(s.amdPhase || s.amd_phase)}</strong></span>
+                      <span>Bias: <strong style={{ color: '#e6edf3' }}>{formatMarketBias(s.marketBias || s.h4Bias || s.h4_bias)}</strong></span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 6, fontSize: 11, color: '#8b949e', fontFamily: 'var(--font-mono)' }}>
+                      <span>Entry: <MaskedSignalValue signal={s} value={s.entryPrice ?? s.entry} /></span>
+                      <span>SL: <MaskedSignalValue signal={s} value={s.stopLoss ?? s.sl} color="#f85149" /></span>
+                      <span>TP: <MaskedSignalValue signal={s} value={s.takeProfit ?? s.tp} color="#3fb950" /></span>
+                      {!isSignalMasked(s) && <span>Conf: {s.confidence}%</span>}
                     </div>
                   </div>
-                ) : (
-                  recentSignals.map((signal, i) => (
-                    <div key={i} style={{
-                      background: '#0d1117',
-                      border: `1px solid ${signal.direction === 'BUY' ? 'rgba(63,185,80,0.3)' : 'rgba(248,81,73,0.3)'}`,
-                      borderRadius: 8, padding: '12px 14px', marginBottom: 8,
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{
-                            background: signal.direction === 'BUY' ? 'rgba(63,185,80,0.2)' : 'rgba(248,81,73,0.2)',
-                            color: signal.direction === 'BUY' ? '#3fb950' : '#f85149',
-                            padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700,
-                          }}>
-                            {signal.direction === 'BUY' ? '🟢' : '🔴'} {signal.direction}
-                          </span>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: '#e6edf3' }}>
-                            {signal.symbol}
-                          </span>
-                          <span style={{ fontSize: 11, color: '#8b949e' }}>
-                            {signal.session?.toUpperCase()}
-                          </span>
-                        </div>
-                        <span style={{ fontSize: 11, color: '#545d68' }}>
-                          {signal.createdAt ? new Date(signal.createdAt).toLocaleTimeString() : '—'}
-                        </span>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                        <div style={{ fontSize: 11 }}>
-                          <div style={{ color: '#545d68', marginBottom: 2 }}>Entry</div>
-                          <div style={{ color: '#e6edf3', fontWeight: 600 }}>
-                            {signal.entryPrice ? signal.entryPrice.toFixed(signal.symbol?.includes('JPY') ? 3 : 5) : '—'}
-                          </div>
-                        </div>
-                        <div style={{ fontSize: 11 }}>
-                          <div style={{ color: '#545d68', marginBottom: 2 }}>SL</div>
-                          <div style={{ color: '#f85149', fontWeight: 600 }}>
-                            {signal.stopLoss ? signal.stopLoss.toFixed(signal.symbol?.includes('JPY') ? 3 : 5) : '—'}
-                          </div>
-                        </div>
-                        <div style={{ fontSize: 11 }}>
-                          <div style={{ color: '#545d68', marginBottom: 2 }}>TP</div>
-                          <div style={{ color: '#3fb950', fontWeight: 600 }}>
-                            {signal.takeProfit ? signal.takeProfit.toFixed(signal.symbol?.includes('JPY') ? 3 : 5) : '—'}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-                        <span style={{ fontSize: 10, color: '#d4af37' }}>
-                          Confidence: {signal.confidence ? `${signal.confidence}%` : '—'}
-                        </span>
-                        <span style={{ fontSize: 10, color: '#8b949e' }}>
-                          Grade: {signal.grade || '—'}
-                        </span>
-                        <span style={{ fontSize: 10, color: '#8b949e' }}>
-                          Phase: {signal.amdPhase || '—'}
-                        </span>
-                      </div>
-                    </div>
-                  ))
+                )) : (
+                  <div style={{ textAlign: 'center', padding: 40, color: '#545d68' }}>
+                    <Brain size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
+                    <div>No fresh alerts</div>
+                    <div style={{ fontSize: 11, marginTop: 4 }}>New TRADEs flash here via WebSocket</div>
+                  </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Signal History */}
           <LockedFeature
             requiredTier="discovery"
             featureName="AI Signal Feed"
             currentTier={userTier}
             blur={true}
           >
+          <div className="stats-grid" style={{ marginTop: 20, marginBottom: 12, gridTemplateColumns: 'repeat(5, 1fr)' }}>
+            <div className="stat-card" style={{ padding: 12 }}>
+              <div className="stat-card-label" style={{ fontSize: 10 }}>Wins</div>
+              <div className="stat-card-value" style={{ color: '#3fb950', fontSize: 20 }}>{signalStats.wins}</div>
+            </div>
+            <div className="stat-card" style={{ padding: 12 }}>
+              <div className="stat-card-label" style={{ fontSize: 10 }}>Losses</div>
+              <div className="stat-card-value" style={{ color: '#f85149', fontSize: 20 }}>{signalStats.losses}</div>
+            </div>
+            <div className="stat-card" style={{ padding: 12 }}>
+              <div className="stat-card-label" style={{ fontSize: 10 }}>Pending</div>
+              <div className="stat-card-value" style={{ color: '#d4af37', fontSize: 20 }}>{signalStats.pending}</div>
+            </div>
+            <div className="stat-card" style={{ padding: 12 }}>
+              <div className="stat-card-label" style={{ fontSize: 10 }}>Win Rate</div>
+              <div className="stat-card-value" style={{ fontSize: 20 }}>{signalStats.win_rate}%</div>
+            </div>
+            <div className="stat-card" style={{ padding: 12 }}>
+              <div className="stat-card-label" style={{ fontSize: 10 }}>Total</div>
+              <div className="stat-card-value" style={{ fontSize: 20 }}>{signalStats.total}</div>
+            </div>
+          </div>
+
           <div className="card">
-            <div className="card-header"><span className="card-title"><Brain size={16} /> Live Engine Signals</span><span className="badge badge-blue">{signals.length}</span></div>
+            <div className="card-header">
+              <span className="card-title"><Brain size={16} /> Live Engine Signals</span>
+              <span className="badge badge-blue">{signals.length}</span>
+            </div>
+            <div style={{ padding: '0 16px 8px', fontSize: 11, color: '#545d68' }}>
+              Active book — live-aligned prices + paper outcome (TP/SL hit).
+            </div>
             <div className="card-body" style={{ padding: 0 }}>
               <div className="table-container overflow-table-wrapper signals-table-wrap">
                 <table>
                   <thead>
                     <tr>
                       <th>ID</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP</th>
+                      <th>Outcome</th>
                       <th>Conf</th><th>Grade</th><th>AI Market Phase</th><th>H4 Bias</th><th>Session</th><th>Risk</th><th>Notes</th>
                     </tr>
                   </thead>
                   <tbody>
                     {validSignals.length === 0 && (
                       <tr>
-                        <td colSpan={12} style={{ textAlign: 'center', padding: 48, color: '#545d68' }}>
+                        <td colSpan={14} style={{ textAlign: 'center', padding: 48, color: '#545d68' }}>
                           No live engine signals yet. Signals appear when the engine generates a TRADE
-                          for any enabled symbol (XAUUSD, EURUSD, GBPUSD, USDJPY, GBPJPY, XTIUSD).
+                          for any enabled symbol (XAUUSD, EURUSD, GBPUSD, USDJPY, GBPJPY, XTIUSD, SPXUSD).
                         </td>
                       </tr>
                     )}
-                    {validSignals.map(s => (
+                    {validSignals.map((s, i) => (
                       <tr
-                        key={s._id}
+                        key={s._id || s.id || i}
                         onClick={() => setSelectedSignal(s)}
                         style={{ cursor: 'pointer' }}
                         title="Click for details"
                       >
                         <td style={{ color: '#8b949e', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
-                          {s._id && s._id !== 'undefined' ? s._id.slice(-6) : '—'}
+                          {(s._id && s._id !== 'undefined' ? s._id.slice(-6) : null) || (s.id ? String(s.id).slice(-6) : '—')}
                         </td>
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{s.symbol}</td>
                         <td><span className={`badge ${s.direction === 'BUY' ? 'badge-green' : s.direction === 'SELL' ? 'badge-red' : 'badge-blue'}`}>{s.direction}</span></td>
@@ -269,6 +278,11 @@ export default function AISignals() {
                         </td>
                         <td style={{ color: '#f85149', fontFamily: 'var(--font-mono)', fontSize: 11 }}><MaskedSignalValue signal={s} value={s.stopLoss ?? s.sl} color="#f85149" /></td>
                         <td style={{ color: '#3fb950', fontFamily: 'var(--font-mono)', fontSize: 11 }}><MaskedSignalValue signal={s} value={s.takeProfit ?? s.tp} color="#3fb950" /></td>
+                        <td>
+                          <span className={`badge ${outcomeBadgeClass(s.status)}`}>
+                            {outcomeLabel(s.status)}
+                          </span>
+                        </td>
                         <td>
                           {isSignalMasked(s) ? (
                             <MaskedSignalValue signal={s} value={s.confidence} />
