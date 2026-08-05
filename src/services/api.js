@@ -275,20 +275,49 @@ export const api = {
   },
 
   // —— Signals ——
-  getSignals: async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return protectedFetch(`${API_BASE}/signals/history${query ? `?${query}` : ''}`);
+  getSignals: async () => {
+    const result = await protectedFetch(`${API_BASE}/signals`);
+    if (Array.isArray(result) && result.length) return result;
+    if (result?.signals?.length) return result.signals;
+    try {
+      const eng = await fetch(`${ENGINE_BASE}/engine/signals`).then((r) => (r.ok ? r.json() : null));
+      if (eng?.history?.length) return eng.history;
+      if (eng?.active?.length) return eng.active;
+    } catch (_) { /* engine offline */ }
+    return Array.isArray(result) ? result : [];
   },
 
   getEngineActiveSignals: async () => {
-    const data = await protectedFetch(`${API_BASE}/engine/signals/active`, {}, { signals: [] });
-    return data?.signals || [];
+    const data = await protectedFetch(`${API_BASE}/engine/signals/active`, {}, null);
+    if (data?.signals?.length || data?.stats) {
+      return { signals: data.signals || [], stats: data.stats || {} };
+    }
+    try {
+      const eng = await fetch(`${ENGINE_BASE}/engine/signals/active`).then((r) => (r.ok ? r.json() : null));
+      if (eng) return { signals: eng.signals || [], stats: eng.stats || {} };
+    } catch (_) { /* engine offline */ }
+    return { signals: [], stats: {} };
   },
 
   getSignalHistory: async () => {
-    const result = await protectedFetch(`${API_BASE}/signals/history`, {}, { signals: [] });
-    if (Array.isArray(result)) return result;
-    return result?.signals || [];
+    const result = await protectedFetch(`${API_BASE}/signals/history`, {}, null);
+    if (Array.isArray(result) && result.length) return result;
+    try {
+      const eng = await fetch(`${ENGINE_BASE}/engine/signals`).then((r) => (r.ok ? r.json() : null));
+      if (eng?.history?.length) return eng.history;
+      const mongo = await fetch(`${ENGINE_BASE}/engine/signals/active`).then((r) => (r.ok ? r.json() : null));
+      if (mongo?.signals?.length) return mongo.signals;
+    } catch (_) { /* engine offline */ }
+    return Array.isArray(result) ? result : [];
+  },
+
+  getSignalStats: async () => {
+    try {
+      const eng = await fetch(`${ENGINE_BASE}/engine/signals/active`).then((r) => (r.ok ? r.json() : null));
+      return eng?.stats || {};
+    } catch (_) {
+      return {};
+    }
   },
 
   getMarketAnalysis: async () => {
@@ -358,7 +387,7 @@ export const api = {
 
   /** Use GET /api/signals — not /api/engine/signals */
   getEngineSignals: async () => {
-    const data = await protectedFetch(`${API_BASE}/signals`);
+    const data = await api.getSignals();
     return normalizeSignalsResponse(data);
   },
 
@@ -471,20 +500,6 @@ export const api = {
         min_confidence: minConfidence,
         is_test: isTest
       })
-    });
-  },
-
-  updateEngineConfidence: async (data) => {
-    return protectedFetch(`${API_BASE}/engine/confidence`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  sendTelegramBroadcast: async (data) => {
-    return protectedFetch(`${API_BASE}/engine/telegram/broadcast`, {
-      method: 'POST',
-      body: JSON.stringify(data),
     });
   },
 

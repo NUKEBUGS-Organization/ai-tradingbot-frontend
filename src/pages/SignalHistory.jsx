@@ -2,10 +2,18 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import SignalDetailModal from '../components/SignalDetailModal';
-import { GradeBadge, SessionBadge, AmdPhaseBadge, H4BiasIndicator } from '../components/signalBadges';
+import { GradeBadge, SessionBadge } from '../components/signalBadges';
 import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalValue';
 import api from '../services/api';
 import { History, Filter } from 'lucide-react';
+import {
+  isSignalWin,
+  isSignalLoss,
+  isSignalClosed,
+  outcomeLabel,
+  outcomeBadgeClass,
+  normalizeSignalStatus,
+} from '../utils/signalOutcome';
 
 export default function SignalHistory() {
   const [signals, setSignals] = useState([]);
@@ -32,14 +40,20 @@ export default function SignalHistory() {
     return signals.filter((s) => {
       if (symbolFilter !== 'ALL' && s.symbol !== symbolFilter) return false;
       if (directionFilter !== 'ALL' && s.direction !== directionFilter) return false;
-      if (statusFilter !== 'ALL' && s.status !== statusFilter) return false;
+      if (statusFilter !== 'ALL') {
+        const st = normalizeSignalStatus(s.status);
+        const want = normalizeSignalStatus(statusFilter);
+        if (statusFilter === 'win' && !isSignalWin(s)) return false;
+        else if (statusFilter === 'loss' && !isSignalLoss(s)) return false;
+        else if (statusFilter !== 'win' && statusFilter !== 'loss' && st !== want && s.status !== statusFilter) return false;
+      }
       return true;
     });
   }, [signals, symbolFilter, directionFilter, statusFilter]);
 
   const stats = useMemo(() => {
-    const closed = filtered.filter((s) => ['win', 'loss', 'executed', 'closed'].includes(s.status));
-    const wins = filtered.filter((s) => s.status === 'win' || (s.result === 'win'));
+    const closed = filtered.filter(isSignalClosed);
+    const wins = filtered.filter(isSignalWin);
     const confSum = filtered.reduce((a, s) => a + (s.confidence || 0), 0);
     const sessions = {};
     filtered.forEach((s) => {
@@ -124,7 +138,7 @@ export default function SignalHistory() {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   style={{ background: '#161b22', border: '1px solid #21262d', color: '#e6edf3', padding: '4px 8px', borderRadius: 6, fontSize: 12 }}
                 >
-                  {['ALL', 'active', 'executed', 'expired', 'cancelled', 'win', 'loss'].map((st) => (
+                  {['ALL', 'active', 'win', 'loss', 'executed', 'expired', 'cancelled'].map((st) => (
                     <option key={st} value={st}>{st}</option>
                   ))}
                 </select>
@@ -136,26 +150,30 @@ export default function SignalHistory() {
                   <thead>
                     <tr>
                       <th>ID</th><th>Symbol</th><th>Dir</th><th>Entry</th><th>SL</th><th>TP</th>
-                      <th>Conf</th><th>Grade</th><th>Session</th><th>Status</th><th>Time</th>
+                      <th>Conf</th><th>Grade</th><th>Session</th><th>Outcome</th><th>Time</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map((s) => (
-                      <tr key={s._id} onClick={() => setSelectedSignal(s)} style={{ cursor: 'pointer' }}>
-                        <td style={{ fontSize: 10, color: '#545d68' }}>{s._id ? s._id.toString().slice(-6).toUpperCase() : '—'}</td>
+                      <tr key={s._id || s.id} onClick={() => setSelectedSignal(s)} style={{ cursor: 'pointer' }}>
+                        <td style={{ fontSize: 10, color: '#545d68' }}>{String(s._id || s.id || '').slice(-6) || '—'}</td>
                         <td style={{ fontWeight: 600 }}>{s.symbol}</td>
                         <td>
                           <span className={`badge ${s.direction === 'BUY' ? 'badge-green' : 'badge-red'}`}>{s.direction}</span>
                         </td>
-                        <td><MaskedSignalValue signal={s} value={s.entryPrice} /></td>
-                        <td style={{ color: '#f85149' }}><MaskedSignalValue signal={s} value={s.stopLoss} color="#f85149" /></td>
-                        <td style={{ color: '#3fb950' }}><MaskedSignalValue signal={s} value={s.takeProfit} color="#3fb950" /></td>
-                        <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.confidence} /> : (s.confidence ? `${s.confidence}%` : '—')}</td>
+                        <td><MaskedSignalValue signal={s} value={s.entryPrice ?? s.entry} /></td>
+                        <td style={{ color: '#f85149' }}><MaskedSignalValue signal={s} value={s.stopLoss ?? s.sl} color="#f85149" /></td>
+                        <td style={{ color: '#3fb950' }}><MaskedSignalValue signal={s} value={s.takeProfit ?? s.tp} color="#3fb950" /></td>
+                        <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.confidence} /> : `${s.confidence}%`}</td>
                         <td>{isSignalMasked(s) ? <MaskedSignalValue signal={s} value={s.grade} /> : <GradeBadge grade={s.grade} />}</td>
                         <td><SessionBadge session={s.session} /></td>
-                        <td><span className="badge badge-gold">{s.status}</span></td>
+                        <td>
+                          <span className={`badge ${outcomeBadgeClass(s.status)}`}>
+                            {outcomeLabel(s.status)}
+                          </span>
+                        </td>
                         <td style={{ fontSize: 11, color: '#8b949e' }}>
-                          {s.createdAt ? new Date(s.createdAt).toLocaleString() : '—'}
+                          {s.createdAt || s.timestamp ? new Date(s.createdAt || s.timestamp).toLocaleString() : '—'}
                         </td>
                       </tr>
                     ))}
