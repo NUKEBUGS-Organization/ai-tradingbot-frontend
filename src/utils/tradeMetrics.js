@@ -68,19 +68,29 @@ export function buildMarketAnalysisFromSignals(signals) {
     activeBuySignals: activeBuy,
     activeSellSignals: activeSell,
     totalExecuted: list.filter((s) => s.status === 'executed').length,
-    successRate: 73.5,
+    successRate: null,
   };
 }
 
 export function normalizeSignalsList(data) {
-  const list = Array.isArray(data) ? data : [];
-  const active = list.filter((s) => s.status === 'active');
+  const list = Array.isArray(data) ? data : (data?.history || data?.active || []);
+  const stats = data?.stats || {};
+  const active = list.filter((s) => {
+    const st = String(s.status || 'active').toLowerCase();
+    return st === 'active' || st === 'pending' || st === 'open';
+  });
+  const wins = Number(stats.wins) || list.filter((s) => ['win', 'hit_tp'].includes(String(s.status).toLowerCase())).length;
+  const losses = Number(stats.losses) || list.filter((s) => ['loss', 'hit_sl'].includes(String(s.status).toLowerCase())).length;
+  const closed = wins + losses;
   return {
     active,
     history: list,
     stats: {
-      total: list.length,
-      win_rate: list.length ? Math.round((active.length / list.length) * 100) : 0,
+      total: Number(stats.total) || list.length,
+      wins,
+      losses,
+      pending: Number(stats.pending) ?? active.length,
+      win_rate: closed ? Math.round((wins / closed) * 1000) / 10 : Number(stats.win_rate) || 0,
     },
   };
 }
