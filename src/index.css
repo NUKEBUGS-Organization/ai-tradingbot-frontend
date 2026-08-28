@@ -837,6 +837,44 @@ tr:hover td { background: rgba(255,255,255,0.015); }
 .chart-container { width: 100%; height: 300px; }
 
 /* TradingView forex dashboard */
+.dashboard-chart {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.forex-chart-dashboard {
+  box-sizing: border-box;
+}
+
+.forex-pair-tabs,
+.forex-interval-tabs {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.forex-pair-tabs::-webkit-scrollbar,
+.forex-interval-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tradingview-chart-shell,
+.tradingview-chart-mount,
+.tradingview-widget-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+.tradingview-chart-shell iframe,
+.tradingview-widget-container iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
 .live-chart-body {
   min-height: 620px;
   overflow: hidden;
@@ -1395,17 +1433,20 @@ tr:hover td { background: rgba(255,255,255,0.015); }
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 
-  .dashboard-chart,
-  .dashboard-chart .live-chart-body {
-    min-height: 300px !important;
-    height: 300px !important;
+  .dashboard-chart {
+    margin-bottom: 16px;
   }
 
-  .dashboard-chart .live-chart-body .tradingview-widget-container,
-  .dashboard-chart .live-chart-body .tradingview-widget-container iframe,
-  .dashboard-chart .live-chart-widget {
-    min-height: 280px !important;
-    height: 280px !important;
+  .forex-chart-header {
+    padding: 12px !important;
+  }
+
+  .forex-chart-toolbar {
+    padding: 8px 12px !important;
+  }
+
+  .forex-chart-stage {
+    padding: 4px !important;
   }
 
   .dashboard-connection-grid {
@@ -1420,10 +1461,8 @@ tr:hover td { background: rgba(255,255,255,0.015); }
 }
 
 @media (min-width: 769px) {
-  .dashboard-chart,
-  .dashboard-chart .live-chart-body {
-    min-height: 500px;
-    height: 500px;
+  .dashboard-chart .tradingview-chart-shell {
+    min-height: 460px;
   }
 }
 
@@ -2068,12 +2107,20 @@ tr:hover td { background: rgba(255,255,255,0.015); }
 
   .page-content {
     padding: 16px;
+    overflow-x: hidden;
+  }
+
+  .dashboard-chart,
+  .forex-chart-dashboard,
+  .tradingview-chart-shell {
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .live-chart-body,
   .live-chart-widget {
-    min-height: 420px !important;
-    height: 420px !important;
+    min-height: auto !important;
+    height: auto !important;
   }
 }
 

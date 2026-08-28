@@ -172,7 +172,7 @@ export default function Checkout() {
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, fontSize: 11, color: '#545d68' }}>
                     <Shield size={12} />
-                    Payments processed securely via PaymentCloud
+                    Payments processed securely via NOWPayments (crypto)
                   </div>
                 </div>
               </div>

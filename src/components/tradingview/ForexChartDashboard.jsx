@@ -20,7 +20,15 @@ const INTERVALS = [
   { value: 'W', label: 'W' },
 ];
 
-const CHART_HEIGHT = 600;
+function getResponsiveChartHeight(viewportWidth, viewportHeight, isFullscreen) {
+  if (isFullscreen) {
+    return Math.max(360, viewportHeight - 160);
+  }
+  if (viewportWidth < 480) return 320;
+  if (viewportWidth < 768) return 380;
+  if (viewportWidth < 1024) return 460;
+  return 560;
+}
 
 export default function ForexChartDashboard() {
   const [activePairId, setActivePairId] = useState('XAUUSD');
@@ -30,10 +38,13 @@ export default function ForexChartDashboard() {
   const [customSymbol, setCustomSymbol] = useState(null);
   const [chartKey, setChartKey] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState(
-    typeof window !== 'undefined' ? window.innerHeight : 800
-  );
+  const [viewport, setViewport] = useState(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1024,
+    height: typeof window !== 'undefined' ? window.innerHeight : 800,
+  }));
   const shellRef = useRef(null);
+
+  const isMobile = viewport.width < 768;
 
   const activePair = useMemo(
     () => FOREX_PAIRS.find((p) => p.id === activePairId) || FOREX_PAIRS[0],
@@ -93,27 +104,31 @@ export default function ForexChartDashboard() {
   }, []);
 
   useEffect(() => {
-    const onResize = () => setViewportHeight(window.innerHeight);
+    const onResize = () => {
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+    };
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
   }, []);
 
   const shellClass = [
-    'w-full rounded-xl border border-tv-border bg-tv-card/80 shadow-glass backdrop-blur-glass transition-all duration-300',
-    isFullscreen ? 'fixed inset-0 z-[200] m-0 flex flex-col rounded-none border-0 p-4' : '',
+    'forex-chart-dashboard w-full max-w-full min-w-0 rounded-xl border border-tv-border bg-tv-card/80 shadow-glass backdrop-blur-glass transition-all duration-300',
+    isFullscreen ? 'fixed inset-0 z-[200] m-0 flex flex-col rounded-none border-0 p-2 sm:p-4' : '',
   ].join(' ');
 
-  const chartHeight = isFullscreen
-    ? Math.max(400, viewportHeight - 160)
-    : CHART_HEIGHT;
+  const chartHeight = getResponsiveChartHeight(viewport.width, viewport.height, isFullscreen);
 
   return (
     <div ref={shellRef} className={shellClass}>
       {/* Header */}
-      <div className="flex flex-col gap-4 border-b border-tv-border p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight text-white sm:text-xl">Live Forex Charts</h2>
-          <p className="mt-0.5 text-xs text-tv-muted sm:text-sm">
+      <div className="forex-chart-header flex flex-col gap-3 border-b border-tv-border p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
+        <div className="min-w-0">
+          <h2 className="text-base font-bold tracking-tight text-white sm:text-xl">Live Forex Charts</h2>
+          <p className="mt-0.5 truncate text-xs text-tv-muted sm:text-sm">
             {activePair.label}
             <span className="mx-1.5 text-tv-border">·</span>
             {activePair.title}
@@ -126,7 +141,7 @@ export default function ForexChartDashboard() {
           </p>
         </div>
 
-        <form onSubmit={handleSearchSubmit} className="flex w-full max-w-xs gap-2 sm:w-auto">
+        <form onSubmit={handleSearchSubmit} className="flex w-full min-w-0 gap-2 sm:max-w-xs sm:w-auto">
           <input
             type="text"
             value={search}
@@ -145,9 +160,9 @@ export default function ForexChartDashboard() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col gap-3 border-b border-tv-border px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="forex-chart-toolbar flex flex-col gap-2 border-b border-tv-border px-3 py-2 sm:gap-3 sm:px-4 sm:py-3 lg:flex-row lg:items-center lg:justify-between">
         {/* Pair tabs */}
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Forex pairs">
+        <div className="forex-pair-tabs flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Forex pairs">
           {FOREX_PAIRS.map((pair) => {
             const isActive = !customSymbol && activePairId === pair.id;
             return (
@@ -158,7 +173,7 @@ export default function ForexChartDashboard() {
                 aria-selected={isActive}
                 onClick={() => handlePairClick(pair.id)}
                 className={[
-                  'rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200',
+                  'shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-200 sm:px-4 sm:py-2 sm:text-sm',
                   isActive
                     ? 'bg-tv-gold text-black shadow-md shadow-tv-gold/25'
                     : 'border border-tv-border bg-tv-bg text-tv-muted hover:border-tv-gold/50 hover:text-white',
@@ -170,16 +185,16 @@ export default function ForexChartDashboard() {
           })}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="forex-chart-controls flex flex-wrap items-center gap-1.5 sm:gap-2">
           {/* Interval */}
-          <div className="flex flex-wrap gap-1 rounded-lg border border-tv-border bg-tv-bg p-1">
+          <div className="forex-interval-tabs flex max-w-full gap-1 overflow-x-auto rounded-lg border border-tv-border bg-tv-bg p-1">
             {INTERVALS.map((iv) => (
               <button
                 key={iv.value}
                 type="button"
                 onClick={() => setInterval(iv.value)}
                 className={[
-                  'rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-200',
+                  'shrink-0 rounded-md px-2 py-1 text-[11px] font-medium transition-colors duration-200 sm:px-2.5 sm:text-xs',
                   interval === iv.value
                     ? 'bg-tv-gold/20 text-tv-gold'
                     : 'text-tv-muted hover:text-white',
@@ -223,14 +238,15 @@ export default function ForexChartDashboard() {
       </div>
 
       {/* Chart */}
-      <div className={`p-2 sm:p-4 ${isFullscreen ? 'flex-1 min-h-0' : ''}`}>
+      <div className={`forex-chart-stage p-1 sm:p-4 ${isFullscreen ? 'flex min-h-0 flex-1 flex-col' : ''}`}>
         <TradingViewChart
-          key={`${tvSymbol}-${interval}-${theme}-${chartKey}`}
+          key={`${tvSymbol}-${interval}-${theme}-${chartKey}-${isMobile ? 'm' : 'd'}`}
           symbol={tvSymbol}
           interval={interval}
           theme={theme}
           height={chartHeight}
           allowSymbolChange={!!customSymbol}
+          mobile={isMobile}
         />
       </div>
     </div>
