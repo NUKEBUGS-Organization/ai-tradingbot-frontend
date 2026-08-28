@@ -4,13 +4,14 @@ import Header from '../components/Header';
 import LockedFeature from '../components/LockedFeature';
 import { useAuth, getUserTier } from '../context/AuthContext';
 import api from '../services/api';
-import { pickMt5LiveAccount, hasLiveMt5Connection, mapRiskSettingsForUi } from '../utils/tradeMetrics';
+import { normalizeSignalsList, pickMt5LiveAccount, hasLiveMt5Connection, mapRiskSettingsForUi } from '../utils/tradeMetrics';
 import { useWebSocket } from '../services/websocket';
 import { Cpu, Activity, Wifi, WifiOff, Zap, Shield, RefreshCw, AlertTriangle, Play, BarChart3 } from 'lucide-react';
 import MaskedSignalValue, { isSignalMasked } from '../components/MaskedSignalValue';
 import { formatMarketPhase, formatSession } from '../utils/signalDisplay';
+import { outcomeLabel, outcomeBadgeClass, normalizeSignalStatus } from '../utils/signalOutcome';
 
-const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'GBPJPY', 'XTIUSD'];
+const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'GBPJPY', 'XTIUSD', 'SPXUSD'];
 
 export default function EnginePanel() {
   const { user } = useAuth();
@@ -49,9 +50,10 @@ export default function EnginePanel() {
       const userId = profile?._id;
       const eng = await api.getEngineStatus();
       const live = pickMt5LiveAccount(eng, wsAccount);
-      const [risk, sigList, aiTrades, atStatus] = await Promise.all([
+      const [risk, sigList, engineActive, aiTrades, atStatus] = await Promise.all([
         api.getEngineRisk(userId, profile, eng),
-        api.getEngineSignals(),
+        api.getSignals(),
+        api.getEngineActiveSignals().catch(() => ({ signals: [], stats: {} })),
         api.getEngineTrades(),
         api.getAutoTradeStatus(),
       ]);
@@ -64,7 +66,14 @@ export default function EnginePanel() {
         if (prev?.fromMt5) return { ...prev, ...risk, balance: prev.balance, equity: prev.equity, daily_pnl: prev.daily_pnl, open_positions: prev.open_positions, fromMt5: true };
         return risk;
       });
-      setSignals(sigList);
+      const engSignals = Array.isArray(engineActive) ? engineActive : (engineActive?.signals || []);
+      const engStats = (!Array.isArray(engineActive) && engineActive?.stats) || {};
+      const merged = normalizeSignalsList(
+        engSignals.length
+          ? { history: engSignals, active: engSignals.filter((s) => normalizeSignalStatus(s.status) === 'active'), stats: engStats }
+          : sigList
+      );
+      setSignals(merged);
       setEngineTrades(aiTrades);
     } catch (err) {
       console.error(err);
@@ -446,19 +455,24 @@ export default function EnginePanel() {
           <div className="card" style={{ marginTop: 20 }}>
             <div className="card-header">
               <span className="card-title"><Activity size={16} /> Live Engine Signals</span>
-              <button onClick={loadData} style={{ background: '#21262d', border: '1px solid #30363d', color: '#e6edf3', padding: '4px 12px', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
-                <RefreshCw size={12} /> Refresh
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: '#8b949e' }}>
+                  W {signals.stats?.wins ?? 0} / L {signals.stats?.losses ?? 0} · WR {signals.stats?.win_rate ?? 0}%
+                </span>
+                <button onClick={loadData} style={{ background: '#21262d', border: '1px solid #30363d', color: '#e6edf3', padding: '4px 12px', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                  <RefreshCw size={12} /> Refresh
+                </button>
+              </div>
             </div>
             <div className="card-body" style={{ padding: 0 }}>
               <div className="table-container">
                 <table>
                   <thead>
-                    <tr><th>Symbol</th><th>Direction</th><th>Entry</th><th>SL</th><th>TP</th><th>Confidence</th><th>Strategy</th><th>Session</th><th>Status</th></tr>
+                    <tr><th>Symbol</th><th>Direction</th><th>Entry</th><th>SL</th><th>TP</th><th>Confidence</th><th>Strategy</th><th>Session</th><th>Outcome</th></tr>
                   </thead>
                   <tbody>
                     {(signals.history || []).slice(0, 15).map((sig, i) => (
-                      <tr key={sig._id || i}>
+                      <tr key={sig._id || sig.id || i}>
                         <td style={{ color: '#e6edf3', fontWeight: 600 }}>{sig.symbol}</td>
                         <td><span className={`badge ${sig.direction === 'BUY' ? 'badge-green' : 'badge-red'}`}>{sig.direction}</span></td>
                         <td>
@@ -472,7 +486,11 @@ export default function EnginePanel() {
                         <td>{isSignalMasked(sig) ? <MaskedSignalValue signal={sig} value={sig.confidence} /> : <span className={`badge ${sig.confidence >= 80 ? 'badge-green' : sig.confidence >= 60 ? 'badge-gold' : 'badge-red'}`}>{sig.confidence}%</span>}</td>
                         <td>{sig.strategy || '-'}</td>
                         <td>{sig.session || '-'}</td>
-                        <td><span className={`badge ${sig.status === 'active' ? 'badge-green' : 'badge-gold'}`}>{sig.status || 'pending'}</span></td>
+                        <td>
+                          <span className={`badge ${outcomeBadgeClass(sig.status)}`}>
+                            {outcomeLabel(sig.status)}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                     {(!signals.history || signals.history.length === 0) && (
