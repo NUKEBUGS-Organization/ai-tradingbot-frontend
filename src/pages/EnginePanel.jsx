@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import LockedFeature from '../components/LockedFeature';
-import { useAuth, getUserTier } from '../context/AuthContext';
+import { useAuth, getUserTier, isAdminUser } from '../context/AuthContext';
 import api from '../services/api';
 import { normalizeSignalsList, pickMt5LiveAccount, hasLiveMt5Connection, mapRiskSettingsForUi } from '../utils/tradeMetrics';
 import { useWebSocket } from '../services/websocket';
@@ -16,6 +16,7 @@ const ANALYZE_SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'GBPJPY', 'XTIU
 export default function EnginePanel() {
   const { user } = useAuth();
   const userTier = getUserTier(user);
+  const isAdmin = isAdminUser(user);
   const { account: wsAccount } = useWebSocket();
   const [engineStatus, setEngineStatus] = useState(null);
   const [riskStatus, setRiskStatus] = useState(null);
@@ -117,6 +118,7 @@ export default function EnginePanel() {
             <div className="card-header">
               <span className="card-title">MT5 Auto-Execute</span>
               <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {isAdmin && (
                 <button
                   type="button"
                   onClick={toggleAutoTrade}
@@ -126,10 +128,12 @@ export default function EnginePanel() {
                 >
                   Auto-Execute {autoTrade.enabled ? 'ON' : 'OFF'}
                 </button>
+                )}
               </span>
             </div>
             <div className="card-body" style={{ fontSize: 12, color: '#8b949e' }}>
-              <strong style={{ color: '#e6edf3' }}>Auto-Execute</strong> (OFF by default): when enabled, high-confidence
+              <strong style={{ color: '#e6edf3' }}>Auto-Execute</strong> (OFF by default
+              {isAdmin ? '' : '; admin-only control'}): when enabled, high-confidence
               AI signals are sent to the EA for live execution. Enable{' '}
               <strong style={{ color: '#d4af37' }}>Auto Execute Signals</strong> on the MT5 EA and{' '}
               <strong style={{ color: '#d4af37' }}>Algo Trading</strong> in the MT5 toolbar. Bridge{' '}

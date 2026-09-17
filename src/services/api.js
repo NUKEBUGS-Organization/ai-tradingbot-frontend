@@ -3,7 +3,7 @@
  * All protected requests send Authorization: Bearer <token>.
  */
 
-import { API_BASE, ENGINE_BASE, ALLOW_MOCK_AUTH } from '../config/env';
+import { API_BASE, ALLOW_MOCK_AUTH } from '../config/env';
 import { pickMt5LiveAccount, mapRiskSettingsForUi } from '../utils/tradeMetrics';
 
 const getToken = () =>
@@ -166,10 +166,12 @@ export const api = {
     } catch (err) {
       if (!ALLOW_MOCK_AUTH) throw err;
       const normalized = String(email || '').toLowerCase().trim();
-      if (normalized === 'admin@vcl4xengine.com' && password === 'AdminX@2026!#') {
+      if (normalized === (import.meta.env.VITE_MOCK_ADMIN_EMAIL || '').toLowerCase() &&
+          password === (import.meta.env.VITE_MOCK_ADMIN_PASSWORD || '')) {
         return { ...mockAdmin, token: 'mock-admin-token' };
       }
-      if (normalized === 'trader@vcl4xengine.com' && password === 'DemoX@2026!#') {
+      if (normalized === (import.meta.env.VITE_MOCK_USER_EMAIL || '').toLowerCase() &&
+          password === (import.meta.env.VITE_MOCK_USER_PASSWORD || '')) {
         return { ...mockUser, token: 'mock-user-token' };
       }
       throw err;
@@ -279,11 +281,6 @@ export const api = {
     const result = await protectedFetch(`${API_BASE}/signals`);
     if (Array.isArray(result) && result.length) return result;
     if (result?.signals?.length) return result.signals;
-    try {
-      const eng = await fetch(`${ENGINE_BASE}/engine/signals`).then((r) => (r.ok ? r.json() : null));
-      if (eng?.history?.length) return eng.history;
-      if (eng?.active?.length) return eng.active;
-    } catch (_) { /* engine offline */ }
     return Array.isArray(result) ? result : [];
   },
 
@@ -292,32 +289,18 @@ export const api = {
     if (data?.signals?.length || data?.stats) {
       return { signals: data.signals || [], stats: data.stats || {} };
     }
-    try {
-      const eng = await fetch(`${ENGINE_BASE}/engine/signals/active`).then((r) => (r.ok ? r.json() : null));
-      if (eng) return { signals: eng.signals || [], stats: eng.stats || {} };
-    } catch (_) { /* engine offline */ }
     return { signals: [], stats: {} };
   },
 
   getSignalHistory: async () => {
     const result = await protectedFetch(`${API_BASE}/signals/history`, {}, null);
     if (Array.isArray(result) && result.length) return result;
-    try {
-      const eng = await fetch(`${ENGINE_BASE}/engine/signals`).then((r) => (r.ok ? r.json() : null));
-      if (eng?.history?.length) return eng.history;
-      const mongo = await fetch(`${ENGINE_BASE}/engine/signals/active`).then((r) => (r.ok ? r.json() : null));
-      if (mongo?.signals?.length) return mongo.signals;
-    } catch (_) { /* engine offline */ }
     return Array.isArray(result) ? result : [];
   },
 
   getSignalStats: async () => {
-    try {
-      const eng = await fetch(`${ENGINE_BASE}/engine/signals/active`).then((r) => (r.ok ? r.json() : null));
-      return eng?.stats || {};
-    } catch (_) {
-      return {};
-    }
+    const data = await protectedFetch(`${API_BASE}/engine/signals/active`, {}, null);
+    return data?.stats || {};
   },
 
   getMarketAnalysis: async () => {
