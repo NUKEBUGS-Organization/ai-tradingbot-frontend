@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WS_ENDPOINT } from '../config/env';
-import { normalizeMt5Prices, hasLiveMt5Tickers } from '../utils/mt5Prices';
+import { normalizeMt5Prices, hasLiveMarketTickers } from '../utils/mt5Prices';
+
+const LIVE_SOURCES = new Set(['mt5', 'twelvedata']);
 
 export function useWebSocket() {
   const [prices, setPrices] = useState({
@@ -14,25 +16,11 @@ export function useWebSocket() {
   const [priceSource, setPriceSource] = useState(null);
   const wsRef = useRef(null);
   const reconnectRef = useRef(null);
-  const simulationRef = useRef(null);
   const pricesRef = useRef(prices);
 
-  // Keep ref in sync
-  useEffect(() => { pricesRef.current = prices; }, [prices]);
-
-  // Client-side simulation when WebSocket can't connect
-  const startSimulation = useCallback(() => {
-    if (simulationRef.current) return;
-
-    // Do not simulate prices on the client — server/MT5 only
-
-    simulationRef.current = {};
-    setConnected(true);
-  }, []);
-
-  const stopSimulation = useCallback(() => {
-    simulationRef.current = null;
-  }, []);
+  useEffect(() => {
+    pricesRef.current = prices;
+  }, [prices]);
 
   const connect = useCallback(() => {
     try {
@@ -40,7 +28,6 @@ export function useWebSocket() {
 
       ws.onopen = () => {
         setConnected(true);
-        stopSimulation();
         console.log('🔌 WebSocket connected to server');
       };
 
@@ -50,12 +37,12 @@ export function useWebSocket() {
           switch (data.type) {
             case 'price_update':
               if (data.source === 'simulation') break;
-              if (!data.source || data.source !== 'mt5') break;
+              if (!LIVE_SOURCES.has(data.source)) break;
               if (data.prices) {
                 const mapped = normalizeMt5Prices(data.prices);
-                if (hasLiveMt5Tickers(mapped)) {
+                if (hasLiveMarketTickers(mapped)) {
                   setPrices((prev) => ({ ...prev, ...mapped }));
-                  setPriceSource('mt5');
+                  setPriceSource(data.source);
                 }
               }
               break;
@@ -66,7 +53,9 @@ export function useWebSocket() {
               }
               break;
             case 'signal_alert':
-              setSignals(prev => [data.signal, ...prev].slice(0, 10));
+              setSignals((prev) => [data.signal, ...prev].slice(0, 10));
+              break;
+            default:
               break;
           }
         } catch (e) {
@@ -75,8 +64,8 @@ export function useWebSocket() {
       };
 
       ws.onclose = () => {
-        console.log('🔌 WebSocket disconnected, switching to simulation mode');
-        startSimulation();
+        console.log('🔌 WebSocket disconnected');
+        setConnected(false);
         reconnectRef.current = setTimeout(connect, 10000);
       };
 
@@ -86,20 +75,19 @@ export function useWebSocket() {
 
       wsRef.current = ws;
     } catch (e) {
-      console.log('🔌 WebSocket unavailable, running in simulation mode');
-      startSimulation();
+      console.log('🔌 WebSocket unavailable');
+      setConnected(false);
       reconnectRef.current = setTimeout(connect, 15000);
     }
-  }, [startSimulation, stopSimulation]);
+  }, []);
 
   useEffect(() => {
     connect();
     return () => {
       if (wsRef.current) wsRef.current.close();
       if (reconnectRef.current) clearTimeout(reconnectRef.current);
-      stopSimulation();
     };
-  }, [connect, stopSimulation]);
+  }, [connect]);
 
   return { prices, account, signals, connected, priceSource };
 }
