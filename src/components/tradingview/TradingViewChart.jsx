@@ -3,12 +3,6 @@ import { loadTradingViewScript } from '../../utils/loadTradingViewScript';
 
 /**
  * TradingView Advanced Chart via official tv.js widget API.
- * @param {object} props
- * @param {string} props.symbol - TradingView symbol (e.g. OANDA:XAUUSD)
- * @param {string} [props.interval='15'] - Chart interval
- * @param {'dark'|'light'} [props.theme='dark']
- * @param {number} [props.height=600]
- * @param {boolean} [props.allowSymbolChange=false]
  */
 export default function TradingViewChart({
   symbol,
@@ -16,6 +10,7 @@ export default function TradingViewChart({
   theme = 'dark',
   height = 600,
   allowSymbolChange = false,
+  mobile = false,
 }) {
   const wrapperRef = useRef(null);
   const widgetRef = useRef(null);
@@ -35,7 +30,7 @@ export default function TradingViewChart({
 
     const mount = document.createElement('div');
     mount.id = containerId;
-    mount.className = 'tradingview-widget-container';
+    mount.className = 'tradingview-widget-container tradingview-chart-mount';
     mount.style.width = '100%';
     mount.style.height = '100%';
     wrapper.appendChild(mount);
@@ -61,9 +56,9 @@ export default function TradingViewChart({
           enable_publishing: false,
           allow_symbol_change: allowSymbolChange,
           container_id: containerId,
-          hide_side_toolbar: false,
-          hide_top_toolbar: false,
-          hide_legend: false,
+          hide_side_toolbar: mobile,
+          hide_top_toolbar: mobile,
+          hide_legend: mobile,
           save_image: false,
           studies: [],
           backgroundColor: isDark ? '#0d1117' : '#ffffff',
@@ -88,12 +83,28 @@ export default function TradingViewChart({
       widgetRef.current = null;
       wrapper.innerHTML = '';
     };
-  }, [symbol, interval, theme, containerId, allowSymbolChange]);
+  }, [symbol, interval, theme, containerId, allowSymbolChange, mobile]);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper || typeof ResizeObserver === 'undefined') return undefined;
+
+    const notifyResize = () => {
+      window.dispatchEvent(new Event('resize'));
+    };
+
+    const observer = new ResizeObserver(() => {
+      notifyResize();
+    });
+
+    observer.observe(wrapper);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-lg"
-      style={{ height: `${height}px`, minHeight: `${height}px` }}
+      className="tradingview-chart-shell relative w-full max-w-full min-w-0 overflow-hidden rounded-lg"
+      style={{ height: `${height}px`, minHeight: `${Math.min(height, 320)}px` }}
     >
       {loading && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-tv-bg/90 backdrop-blur-sm">
@@ -106,7 +117,7 @@ export default function TradingViewChart({
           <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
-      <div ref={wrapperRef} className="h-full w-full" aria-label={`TradingView chart ${symbol}`} />
+      <div ref={wrapperRef} className="h-full w-full min-w-0" aria-label={`TradingView chart ${symbol}`} />
     </div>
   );
 }

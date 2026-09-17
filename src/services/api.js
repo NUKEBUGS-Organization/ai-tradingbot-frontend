@@ -522,7 +522,7 @@ export const api = {
     });
   },
 
-  // —— Checkout / PaymentCloud ——
+  // —— Checkout / NOWPayments ——
   getCheckoutCatalog: async () => {
     return publicFetch(`${API_BASE}/checkout/catalog`);
   },

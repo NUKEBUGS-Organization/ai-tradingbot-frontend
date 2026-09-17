@@ -15,9 +15,13 @@ export default function CheckoutSuccess() {
 
   useEffect(() => {
     clearCart();
-    if (orderNumber) {
-      api.getCheckoutOrder(orderNumber).then(setOrder).catch(() => {});
-    }
+    if (!orderNumber) return;
+
+    const load = () => api.getCheckoutOrder(orderNumber).then(setOrder).catch(() => {});
+
+    load();
+    const id = setInterval(load, 5000);
+    return () => clearInterval(id);
   }, [orderNumber, clearCart]);
 
   return (
@@ -31,7 +35,9 @@ export default function CheckoutSuccess() {
               <CheckCircle size={48} color="#3fb950" style={{ marginBottom: 16 }} />
               <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>Thank You!</h2>
               <p style={{ color: '#8b949e', marginBottom: 20, lineHeight: 1.6 }}>
-                Your payment has been received. Your subscription and/or license will be activated shortly.
+                {order?.status === 'paid'
+                  ? 'Your payment has been received. Your subscription and/or license is now active.'
+                  : 'Your payment is being confirmed. Crypto payments may take a few minutes — your subscription will activate automatically once confirmed.'}
               </p>
               {orderNumber && (
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#d4af37', marginBottom: 24 }}>

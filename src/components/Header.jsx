@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useWebSocket } from '../services/websocket';
-import { useMt5Prices, hasLiveMt5Tickers } from '../hooks/useMt5Prices';
+import { useMt5Prices, hasLiveMarketTickers } from '../hooks/useMt5Prices';
 import { useSidebar } from '../context/SidebarContext';
 import { useAuth, isAdminUser } from '../context/AuthContext';
 import CartButton from './CartButton';
@@ -19,11 +19,22 @@ const PLATFORM_NAME = 'VCL4X AI ECOSYSTEM';
 
 export default function Header({ title }) {
   const { user } = useAuth();
-  const { prices: wsPrices, connected, priceSource } = useWebSocket();
-  const prices = useMt5Prices(wsPrices, priceSource);
+  const { prices: wsPrices, connected, priceSource: wsSource } = useWebSocket();
+  const { prices, source: priceSource } = useMt5Prices(wsPrices, wsSource);
   const prevBids = useRef({});
-  const isMt5 = priceSource === 'mt5' && hasLiveMt5Tickers(prices);
+  const hasPrices = hasLiveMarketTickers(prices);
+  const isMt5 = priceSource === 'mt5' && hasPrices;
+  const isLive = hasPrices && (priceSource === 'mt5' || priceSource === 'twelvedata');
   const { toggle } = useSidebar();
+
+  const liveLabel = !connected ? 'OFFLINE' : isMt5 ? 'MT5 LIVE' : isLive ? 'LIVE' : 'WAITING';
+  const liveTitle = !connected
+    ? 'Disconnected'
+    : isMt5
+      ? 'MT5 live prices'
+      : isLive
+        ? 'TwelveData market prices'
+        : 'Waiting for market quotes';
 
   return (
     <header className="top-bar header">
@@ -55,14 +66,12 @@ export default function Header({ title }) {
           <span
             className="live-dot"
             style={{
-              background: connected ? (isMt5 ? '#3fb950' : '#8b949e') : '#f85149',
-              boxShadow: connected && isMt5 ? '0 0 8px #3fb950' : 'none',
+              background: connected ? (isLive ? '#3fb950' : '#8b949e') : '#f85149',
+              boxShadow: connected && isLive ? '0 0 8px #3fb950' : 'none',
             }}
-            title={connected ? (isMt5 ? 'MT5 live prices' : 'Waiting for MT5 quotes') : 'Disconnected'}
+            title={liveTitle}
           />
-          <span className="live-indicator-text">
-            {connected ? (isMt5 ? 'MT5 LIVE' : 'WAITING') : 'OFFLINE'}
-          </span>
+          <span className="live-indicator-text">{liveLabel}</span>
         </div>
       </div>
       <div className="top-bar-right">
@@ -73,7 +82,7 @@ export default function Header({ title }) {
             const prev = prevBids.current[key];
             const dir = bid != null && prev != null ? (bid >= prev ? 'up' : 'down') : '';
             if (bid != null) prevBids.current[key] = bid;
-            const hasLive = bid != null && isMt5;
+            const hasLive = bid != null && isLive;
             return (
               <div className="ticker-item" key={key}>
                 <span
@@ -85,7 +94,7 @@ export default function Header({ title }) {
                     flexShrink: 0,
                     marginRight: 4,
                   }}
-                  title={hasLive ? 'MT5' : connected ? 'No quote yet' : 'Offline'}
+                  title={hasLive ? (isMt5 ? 'MT5' : 'TwelveData') : connected ? 'No quote yet' : 'Offline'}
                 />
                 <span className="ticker-symbol">{label}</span>
                 <span className={`ticker-price ${dir}`}>
