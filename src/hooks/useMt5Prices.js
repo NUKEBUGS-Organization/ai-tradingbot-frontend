@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { normalizeMt5Prices, hasLiveMt5Tickers } from '../utils/mt5Prices';
+import { normalizeMt5Prices, hasLiveMarketTickers } from '../utils/mt5Prices';
 
-/** Live MT5 quotes for header tickers — polls engine when WebSocket has no valid live feed. */
+/** Market quotes for header tickers — polls engine when WebSocket has no valid feed. */
 export function useMt5Prices(wsPrices, priceSource) {
   const [enginePrices, setEnginePrices] = useState(null);
+  const [engineSource, setEngineSource] = useState(null);
 
   useEffect(() => {
     const poll = async () => {
@@ -12,8 +13,9 @@ export function useMt5Prices(wsPrices, priceSource) {
         const eng = await api.getEngineStatus();
         const raw = eng?.mt5_prices;
         const mapped = normalizeMt5Prices(raw);
-        if (hasLiveMt5Tickers(mapped)) {
+        if (hasLiveMarketTickers(mapped)) {
           setEnginePrices(mapped);
+          setEngineSource(eng?.price_source || 'twelvedata');
         }
       } catch (_) {
         /* ignore */
@@ -26,13 +28,19 @@ export function useMt5Prices(wsPrices, priceSource) {
   }, []);
 
   const wsNormalized = normalizeMt5Prices(wsPrices);
-  if (priceSource === 'mt5' && hasLiveMt5Tickers(wsNormalized)) {
-    return { ...wsNormalized };
+  if (
+    (priceSource === 'mt5' || priceSource === 'twelvedata') &&
+    hasLiveMarketTickers(wsNormalized)
+  ) {
+    return { prices: { ...wsNormalized }, source: priceSource };
   }
-  if (enginePrices && hasLiveMt5Tickers(enginePrices)) {
-    return { ...wsNormalized, ...enginePrices };
+  if (enginePrices && hasLiveMarketTickers(enginePrices)) {
+    return {
+      prices: { ...wsNormalized, ...enginePrices },
+      source: engineSource || 'twelvedata',
+    };
   }
-  return wsNormalized;
+  return { prices: wsNormalized, source: priceSource };
 }
 
-export { hasLiveMt5Tickers };
+export { hasLiveMarketTickers, hasLiveMarketTickers as hasLiveMt5Tickers };

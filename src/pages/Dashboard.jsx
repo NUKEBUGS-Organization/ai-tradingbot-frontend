@@ -215,7 +215,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="live-chart-body dashboard-chart" style={{ marginBottom: 24 }}>
+          <div className="dashboard-chart">
             <ForexChartDashboard />
           </div>
 

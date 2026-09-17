@@ -64,10 +64,10 @@ export default function CheckoutPay() {
                 }}>
                   <CreditCard size={24} color="#d4af37" />
                 </div>
-                <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>PaymentCloud Checkout</h2>
+                <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>NOWPayments Checkout</h2>
                 <p style={{ fontSize: 13, color: '#8b949e', lineHeight: 1.6 }}>
-                  Secure hosted payment page for VCL4X subscriptions and licenses.
-                  Merchant review mode — live gateway activates once credentials are approved.
+                  Secure crypto payment page for VCL4X subscriptions and licenses.
+                  You will be redirected to NOWPayments to complete your payment.
                 </p>
               </div>
 
@@ -93,9 +93,9 @@ export default function CheckoutPay() {
                     fontSize: 12, color: '#8b949e', lineHeight: 1.6,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, color: '#d4af37', fontWeight: 700 }}>
-                      <Shield size={14} /> PCI-Compliant Hosted Checkout
+                      <Shield size={14} /> Secure Crypto Checkout
                     </div>
-                    Card details are entered on PaymentCloud&apos;s secure page — not stored on VCL4X servers.
+                    Payment is processed on NOWPayments&apos;s secure page — crypto wallet details are not stored on VCL4X servers.
                   </div>
 
                   {error && <div style={{ color: '#f85149', fontSize: 12, marginBottom: 12 }}>{error}</div>}
