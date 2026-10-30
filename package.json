@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node init && vite",
-    "build": "node init && vite build --config vite.config.local.mjs",
+    "dev": "vite",
+    "build": "vite build --config vite.config.local.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
